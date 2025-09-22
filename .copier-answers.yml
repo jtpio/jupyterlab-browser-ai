@@ -1,0 +1,14 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v4.4.0
+_src_path: https://github.com/jupyterlab/extension-template
+author_email: ''
+author_name: Jeremy Tuloup
+has_binder: false
+has_settings: true
+kind: frontend
+labextension_name: jupyterlab-browser-ai
+project_short_description: In-browser AI in JupyterLab and Jupyter Notebook
+python_name: jupyterlab_browser_ai
+repository: https://github.com/jtpio/jupyterlab-browser-ai
+test: false
+
