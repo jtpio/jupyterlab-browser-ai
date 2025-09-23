@@ -63,39 +63,39 @@ const plugin: JupyterFrontEndPlugin<void> = {
           const modelName =
             options.model ?? 'Llama-3.2-3B-Instruct-q4f16_1-MLC';
 
-          // Create model with download progress notification
+          let notificationId: string | null = null;
+
           const model = webLLM(modelName, {
-            initProgressCallback: (report: any) => {
+            initProgressCallback: report => {
               const percentage = Math.round(report.progress * 100);
-              if (percentage === 0) {
-                // Start download notification
-                Notification.emit(
-                  `Downloading ${modelName}...`,
+
+              if (notificationId === null) {
+                notificationId = Notification.emit(
+                  report.text ?? `Downloading ${modelName}...`,
                   'in-progress',
                   {
                     progress: 0,
-                    autoClose: false,
-                    data: { notificationId: `webllm-download-${modelName}` }
+                    autoClose: false
                   }
                 );
               } else if (percentage === 100) {
-                // Complete notification
-                setTimeout(() => {
-                  Notification.emit(`${modelName} ready`, 'success', {
+                if (notificationId) {
+                  Notification.update({
+                    id: notificationId,
+                    message: `${modelName} ready`,
+                    type: 'success',
+                    progress: 1,
                     autoClose: 3000
                   });
-                }, 100);
+                }
               } else {
-                // Update progress
-                Notification.emit(
-                  `Downloading ${modelName}... ${percentage}%`,
-                  'in-progress',
-                  {
-                    progress: report.progress,
-                    autoClose: false,
-                    data: { notificationId: `webllm-download-${modelName}` }
-                  }
-                );
+                if (notificationId) {
+                  Notification.update({
+                    id: notificationId,
+                    message: `Downloading ${modelName}... ${percentage}%`,
+                    progress: report.progress
+                  });
+                }
               }
             }
           });
