@@ -66,6 +66,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
           let notificationId: string | null = null;
 
           const model = webLLM(modelName, {
+            worker: new Worker(new URL('./webllm-worker.js', import.meta.url), {
+              type: 'module'
+            }),
             initProgressCallback: report => {
               const percentage = Math.round(report.progress * 100);
 
