@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.4.0
+
+([Full Changelog](https://github.com/jtpio/jupyterlab-browser-ai/compare/v0.3.0...106e83366622be78a67d39596b541a6d7c5b797b))
+
+### Enhancements made
+
+- Transcribe audio files [#3](https://github.com/jtpio/jupyterlab-browser-ai/pull/3) ([@jtpio](https://github.com/jtpio))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jtpio/jupyterlab-browser-ai/graphs/contributors?from=2025-09-25&to=2025-09-25&type=c))
+
+[@jtpio](https://github.com/search?q=repo%3Ajtpio%2Fjupyterlab-browser-ai+involves%3Ajtpio+updated%3A2025-09-25..2025-09-25&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.3.0
 
 ([Full Changelog](https://github.com/jtpio/jupyterlab-browser-ai/compare/v0.2.0...b3150296b45fa6bbdb6ad1036c6a2582a965a3ba))
@@ -15,8 +31,6 @@
 ([GitHub contributors page for this release](https://github.com/jtpio/jupyterlab-browser-ai/graphs/contributors?from=2025-09-23&to=2025-09-25&type=c))
 
 [@jtpio](https://github.com/search?q=repo%3Ajtpio%2Fjupyterlab-browser-ai+involves%3Ajtpio+updated%3A2025-09-23..2025-09-25&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.2.0
 
