@@ -1528,7 +1528,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/ui-components@npm:^4.2.0, @jupyterlab/ui-components@npm:^4.4.6, @jupyterlab/ui-components@npm:^4.4.7":
+"@jupyterlab/ui-components@npm:^4.0.0, @jupyterlab/ui-components@npm:^4.2.0, @jupyterlab/ui-components@npm:^4.4.6, @jupyterlab/ui-components@npm:^4.4.7":
   version: 4.4.7
   resolution: "@jupyterlab/ui-components@npm:4.4.7"
   dependencies:
@@ -5251,6 +5251,7 @@ __metadata:
     "@jupyterlab/application": ^4.0.0
     "@jupyterlab/builder": ^4.0.0
     "@jupyterlab/settingregistry": ^4.0.0
+    "@jupyterlab/ui-components": ^4.0.0
     "@jupyterlite/ai": ^0.9.0-a0
     "@openai/agents-extensions": ^0.1.2
     "@types/dom-chromium-ai": ^0.0.9
