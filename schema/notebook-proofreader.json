@@ -1,0 +1,16 @@
+{
+  "title": "Notebook Proofreader",
+  "description": "Chrome AI Notebook Proofreader settings.",
+  "jupyter.lab.toolbars": {
+    "Notebook": [
+      {
+        "name": "proofreadNotebook",
+        "command": "chrome-ai:proofread-notebook",
+        "rank": 60
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
