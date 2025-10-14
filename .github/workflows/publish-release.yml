@@ -20,9 +20,8 @@ jobs:
       id-token: write
     steps:
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-
-      - name: Update npm
-        run: npm install -g npm@latest
+        with:
+          node_version: '24'
 
       - uses: actions/create-github-app-token@v1
         id: app-token

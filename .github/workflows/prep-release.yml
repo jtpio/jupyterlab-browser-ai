@@ -30,9 +30,8 @@ jobs:
       contents: write
     steps:
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-
-      - name: Update npm
-        run: npm install -g npm@latest
+        with:
+          node_version: '24'
 
       - name: Prep Release
         id: prep-release

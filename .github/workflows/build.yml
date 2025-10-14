@@ -2,9 +2,9 @@ name: Build
 
 on:
   push:
-    branches: main
+    branches: [main]
   pull_request:
-    branches: '*'
+    branches: ['*']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -20,9 +20,8 @@ jobs:
 
     - name: Base Setup
       uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-
-    - name: Update npm
-      run: npm install -g npm@latest
+      with:
+        node_version: '24'
 
     - name: Install dependencies
       run: python -m pip install -U "jupyterlab>=4.0.0,<5"
@@ -92,6 +91,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      - name: Ensure npm > 11.5.1
-        run: npm install -g npm@latest
+        with:
+          node_version: '24'
       - uses: jupyterlab/maintainer-tools/.github/actions/check-links@v1
