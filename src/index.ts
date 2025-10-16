@@ -18,6 +18,8 @@ import { webLLM, doesBrowserSupportWebLLM } from '@built-in-ai/web-llm';
 
 import { streamText } from 'ai';
 
+import { createChromeAIProvider } from './provider';
+
 /**
  * Utility function to efficiently convert a blob to base64 string
  * Processes in chunks to avoid call stack overflow with large files
@@ -45,12 +47,13 @@ const plugin: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   requires: [IProviderRegistry],
   optional: [ISettingRegistry],
-  activate: (
+  activate: async (
     app: JupyterFrontEnd,
     providerRegistry: IProviderRegistry,
     settingRegistry: ISettingRegistry | null
   ) => {
     if (doesBrowserSupportBuiltInAI()) {
+      await import('./polyfill');
       const chromeAIInfo: IProviderInfo = {
         id: 'chrome-ai',
         name: 'Chrome Built-in AI',
@@ -58,9 +61,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
         defaultModels: ['chrome-ai'],
         supportsBaseURL: false,
         supportsHeaders: false,
-        supportsToolCalling: false,
+        supportsToolCalling: true,
         factory: () => {
-          return builtInAI('text');
+          return createChromeAIProvider('text');
         }
       };
 
