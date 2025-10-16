@@ -10,13 +10,11 @@ import { MarkdownCell } from '@jupyterlab/cells';
 import { imageIcon, textEditorIcon } from '@jupyterlab/ui-components';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 
-import { IChatProviderRegistry, IChatProviderInfo } from '@jupyterlite/ai';
+import { IProviderRegistry, IProviderInfo } from '@jupyterlite/ai';
 
 import { builtInAI, doesBrowserSupportBuiltInAI } from '@built-in-ai/core';
 
 import { webLLM, doesBrowserSupportWebLLM } from '@built-in-ai/web-llm';
-
-import { aisdk } from '@openai/agents-extensions';
 
 import { streamText } from 'ai';
 
@@ -45,35 +43,35 @@ const plugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyterlab-browser-ai:plugin',
   description: 'In-browser AI in JupyterLab and Jupyter Notebook',
   autoStart: true,
-  requires: [IChatProviderRegistry],
+  requires: [IProviderRegistry],
   optional: [ISettingRegistry],
   activate: (
     app: JupyterFrontEnd,
-    chatProviderRegistry: IChatProviderRegistry,
+    providerRegistry: IProviderRegistry,
     settingRegistry: ISettingRegistry | null
   ) => {
     if (doesBrowserSupportBuiltInAI()) {
-      const chromeAIInfo: IChatProviderInfo = {
+      const chromeAIInfo: IProviderInfo = {
         id: 'chrome-ai',
         name: 'Chrome Built-in AI',
-        requiresApiKey: false,
+        apiKeyRequirement: 'none',
         defaultModels: ['chrome-ai'],
         supportsBaseURL: false,
         supportsHeaders: false,
         supportsToolCalling: false,
         factory: () => {
-          return aisdk(builtInAI('text'));
+          return builtInAI('text');
         }
       };
 
-      chatProviderRegistry.registerProvider(chromeAIInfo);
+      providerRegistry.registerProvider(chromeAIInfo);
     }
 
     if (doesBrowserSupportWebLLM()) {
-      const webLLMInfo: IChatProviderInfo = {
+      const webLLMInfo: IProviderInfo = {
         id: 'web-llm',
         name: 'WebLLM',
-        requiresApiKey: false,
+        apiKeyRequirement: 'none',
         defaultModels: [
           'Llama-3.2-3B-Instruct-q4f16_1-MLC',
           'Llama-3.2-1B-Instruct-q4f16_1-MLC',
@@ -128,10 +126,10 @@ const plugin: JupyterFrontEndPlugin<void> = {
             }
           });
 
-          return aisdk(model);
+          return model;
         }
       };
-      chatProviderRegistry.registerProvider(webLLMInfo);
+      providerRegistry.registerProvider(webLLMInfo);
     }
 
     if (settingRegistry) {
