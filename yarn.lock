@@ -197,14 +197,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@built-in-ai/core@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@built-in-ai/core@npm:2.0.0"
+"@built-in-ai/core@npm:^2.1.0-beta.3":
+  version: 2.1.0-beta.3
+  resolution: "@built-in-ai/core@npm:2.1.0-beta.3"
   dependencies:
     "@mediapipe/tasks-text": ^0.10.22-rc.20250304
   peerDependencies:
     ai: ">=5.0.0"
-  checksum: 5d1f45eeb51012936bc502444a85d5b03e442462e06eb80717d46a77ec79c2c6362f5c31285869d72106b2856e90be21e07f4040c989938b7d3458045a4fec7a
+  checksum: 6be024f05263b56ef978d428d07fc42d1ee58fdca228fef364ae2de758300973354854c7ee114742d96ded34d1523e7bf644ef1175fc6570de2b581e2a9ac13e
   languageName: node
   linkType: hard
 
@@ -5304,7 +5304,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "jupyterlab-browser-ai@workspace:."
   dependencies:
-    "@built-in-ai/core": ^2.0.0
+    "@built-in-ai/core": ^2.1.0-beta.3
     "@built-in-ai/web-llm": ^0.2.2
     "@jupyterlab/application": ^4.0.0
     "@jupyterlab/builder": ^4.0.0

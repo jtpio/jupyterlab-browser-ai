@@ -58,7 +58,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         defaultModels: ['chrome-ai'],
         supportsBaseURL: false,
         supportsHeaders: false,
-        supportsToolCalling: false,
+        supportsToolCalling: true,
         factory: () => {
           return builtInAI('text');
         }
