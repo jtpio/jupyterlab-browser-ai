@@ -2393,10 +2393,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/dom-chromium-ai@npm:^0.0.9":
-  version: 0.0.9
-  resolution: "@types/dom-chromium-ai@npm:0.0.9"
-  checksum: 9ea97bba70077d438e056f54341a8ad55bae4fbb37313fbe207847bf7a9fd47fbbd00e9c2c3472ae6b0d8089120f0149972fb0aed1fc2bc1e326d73708d30d03
+"@types/dom-chromium-ai@npm:^0.0.10":
+  version: 0.0.10
+  resolution: "@types/dom-chromium-ai@npm:0.0.10"
+  checksum: 7cb4a196c0af2e7a64fdd93f380fe26c6cd6b679456714c6058bcff6b0c72ff335de91b5bbfcba76603bd738a8e99d1d4cf7c05d32110b569177a9172384e63f
   languageName: node
   linkType: hard
 
@@ -5311,7 +5311,7 @@ __metadata:
     "@jupyterlab/settingregistry": ^4.0.0
     "@jupyterlab/ui-components": ^4.0.0
     "@jupyterlite/ai": ^0.9.0-a3
-    "@types/dom-chromium-ai": ^0.0.9
+    "@types/dom-chromium-ai": ^0.0.10
     "@types/json-schema": ^7.0.11
     "@types/react": ^18.0.26
     "@types/react-addons-linked-state-mixin": ^0.14.22
