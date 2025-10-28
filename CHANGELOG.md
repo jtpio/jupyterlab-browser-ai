@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.5.0
+
+([Full Changelog](https://github.com/jtpio/jupyterlab-browser-ai/compare/v0.4.2...1d2fc7238cc046c2481b82dfc0bea05733a4f333))
+
+### Enhancements made
+
+- Summarize files via the `Summarizer` API [#9](https://github.com/jtpio/jupyterlab-browser-ai/pull/9) ([@jtpio](https://github.com/jtpio))
+- Proofreader API [#4](https://github.com/jtpio/jupyterlab-browser-ai/pull/4) ([@jtpio](https://github.com/jtpio))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jtpio/jupyterlab-browser-ai/graphs/contributors?from=2025-10-16&to=2025-10-28&type=c))
+
+[@jtpio](https://github.com/search?q=repo%3Ajtpio%2Fjupyterlab-browser-ai+involves%3Ajtpio+updated%3A2025-10-16..2025-10-28&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.4.2
 
 ([Full Changelog](https://github.com/jtpio/jupyterlab-browser-ai/compare/v0.4.1...aea67297896951bbe1eba3b87b511e33e6ef9310))
@@ -17,8 +34,6 @@
 ([GitHub contributors page for this release](https://github.com/jtpio/jupyterlab-browser-ai/graphs/contributors?from=2025-10-14&to=2025-10-16&type=c))
 
 [@jtpio](https://github.com/search?q=repo%3Ajtpio%2Fjupyterlab-browser-ai+involves%3Ajtpio+updated%3A2025-10-14..2025-10-16&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.4.1
 
