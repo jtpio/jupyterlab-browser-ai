@@ -155,6 +155,7 @@ namespace CommandIDs {
   export const generateAltText = 'chrome-ai:generate-alt-text';
   export const generateTranscript = 'chrome-ai:generate-transcript';
   export const proofreadNotebook = 'chrome-ai:proofread-notebook';
+  export const summarizeNotebook = 'chrome-ai:summarize-notebook';
 }
 
 /**
@@ -162,6 +163,13 @@ namespace CommandIDs {
  */
 function doesBrowserSupportProofreader(): boolean {
   return typeof window !== 'undefined' && 'Proofreader' in window;
+}
+
+/**
+ * Check if the Summarizer API is available
+ */
+function doesBrowserSupportSummarizer(): boolean {
+  return typeof window !== 'undefined' && 'Summarizer' in window;
 }
 
 class ChromeAIAltTextGenerator {
@@ -566,6 +574,143 @@ const chromeAIAudioPlugin: JupyterFrontEndPlugin<void> = {
   }
 };
 
+class ChromeAISummarizer {
+  /**
+   * Summarize the content of a notebook by combining all cell contents
+   */
+  async summarizeNotebook(
+    notebookPath: string,
+    app: JupyterFrontEnd
+  ): Promise<string> {
+    try {
+      // Load the notebook content
+      const content = await app.serviceManager.contents.get(notebookPath);
+
+      if (content.type !== 'notebook') {
+        throw new Error('Not a notebook file');
+      }
+
+      const notebookContent = content.content as any;
+      const cells = notebookContent.cells || [];
+
+      // Collect text from all cells
+      const cellTexts: string[] = [];
+
+      for (const cell of cells) {
+        const source =
+          typeof cell.source === 'string'
+            ? cell.source
+            : (cell.source || []).join('');
+
+        if (cell.cell_type === 'markdown' && source.trim()) {
+          cellTexts.push(`[Markdown]\n${source}`);
+        } else if (cell.cell_type === 'code' && source.trim()) {
+          cellTexts.push(`[Code]\n${source}`);
+          // Include outputs if available
+          if (cell.outputs && cell.outputs.length > 0) {
+            const outputTexts = cell.outputs
+              .filter((out: any) => out.text || out.data?.['text/plain'])
+              .map((out: any) => out.text || out.data?.['text/plain'])
+              .join('\n');
+            if (outputTexts) {
+              cellTexts.push(`[Output]\n${outputTexts}`);
+            }
+          }
+        }
+      }
+
+      const combinedText = cellTexts.join('\n\n');
+      console.log('Combined Notebook Text for Summarization:', combinedText);
+
+      if (!combinedText.trim()) {
+        return 'No summary available: notebook is empty';
+      }
+
+      // Check if summarizer API is available
+      if (!('Summarizer' in window)) {
+        throw new Error('Summarizer API not available');
+      }
+
+      const availability = await Summarizer.availability();
+
+      if (availability === 'unavailable') {
+        throw new Error('Summarizer API is not available');
+      }
+
+      // Create summarizer
+      const summarizer = await Summarizer.create({
+        type: 'tldr',
+        format: 'plain-text',
+        length: 'medium',
+        sharedContext: 'en'
+      });
+
+      // Summarize the content
+      const summary = await summarizer.summarize(combinedText);
+
+      // Clean up
+      summarizer.destroy();
+
+      return summary;
+    } catch (error) {
+      console.error('Failed to summarize notebook:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Summarize a text file
+   */
+  async summarizeTextFile(
+    filePath: string,
+    app: JupyterFrontEnd
+  ): Promise<string> {
+    try {
+      const content = await app.serviceManager.contents.get(filePath);
+
+      if (content.type !== 'file') {
+        throw new Error('Not a file');
+      }
+
+      const text = content.content as string;
+
+      if (!text.trim()) {
+        return 'Empty file';
+      }
+
+      // Check if summarizer API is available
+      if (!('Summarizer' in window)) {
+        throw new Error('Summarizer API not available');
+      }
+
+      const availability = await Summarizer.availability();
+
+      if (availability === 'unavailable') {
+        throw new Error('Summarizer API is not available');
+      }
+
+      // Create summarizer
+      const summarizer = await Summarizer.create({
+        type: 'tldr',
+        format: 'plain-text',
+        length: 'short',
+        sharedContext: 'en'
+      });
+
+      // Summarize the content
+      const summary = await summarizer.summarize(text);
+
+      // Clean up
+      summarizer.destroy();
+
+      return summary;
+    } catch (error) {
+      console.error('Failed to summarize file:', error);
+      throw error;
+    }
+  }
+}
+
 /**
  * A plugin providing a toolbar button to proofread all markdown cells in a notebook.
  */
@@ -693,9 +838,366 @@ const chromeAIProofreaderPlugin: JupyterFrontEndPlugin<void> = {
   }
 };
 
+/**
+ * A plugin that adds clickable AI summary badges to files in the file browser
+ */
+const chromeAISummarizerPlugin: JupyterFrontEndPlugin<void> = {
+  id: 'jupyterlab-browser-ai:file-summarizer',
+  description: 'Chrome AI File Summarizer with Inline Badges',
+  autoStart: true,
+  requires: [IFileBrowserFactory],
+  activate: (app: JupyterFrontEnd, fileBrowserFactory: IFileBrowserFactory) => {
+    if (!doesBrowserSupportSummarizer()) {
+      console.log('Chrome Summarizer API not supported in this browser');
+      return;
+    }
+
+    const summarizer = new ChromeAISummarizer();
+    const summaryCache = new Map<string, string>();
+    const badgeMap = new WeakMap<Element, HTMLSpanElement>();
+    let tooltipElement: HTMLDivElement | null = null;
+    let currentHoverPath: string | null = null;
+    let hoverTimeout: number | null = null;
+
+    // Listen to file changes to invalidate cache
+    app.serviceManager.contents.fileChanged.connect((sender, change) => {
+      // Invalidate cache for the changed file
+      if (change.type === 'save' && change.newValue) {
+        const changedPath = change.newValue.path;
+        if (changedPath && summaryCache.has(changedPath)) {
+          console.log(`Invalidating cache for modified file: ${changedPath}`);
+          summaryCache.delete(changedPath);
+        }
+      }
+    });
+
+    // Create tooltip element
+    const createTooltip = () => {
+      if (!tooltipElement) {
+        tooltipElement = document.createElement('div');
+        tooltipElement.className = 'jp-ai-summary-tooltip';
+        tooltipElement.style.position = 'fixed';
+        tooltipElement.style.backgroundColor = 'var(--jp-layout-color1)';
+        tooltipElement.style.border = '1px solid var(--jp-border-color1)';
+        tooltipElement.style.borderRadius = '4px';
+        tooltipElement.style.padding = '8px 12px';
+        tooltipElement.style.maxWidth = '400px';
+        tooltipElement.style.fontSize = '12px';
+        tooltipElement.style.lineHeight = '1.4';
+        tooltipElement.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
+        tooltipElement.style.zIndex = '10000';
+        tooltipElement.style.pointerEvents = 'auto';
+        tooltipElement.style.display = 'none';
+        tooltipElement.style.color = 'var(--jp-ui-font-color1)';
+        tooltipElement.style.cursor = 'default';
+        document.body.appendChild(tooltipElement);
+
+        // Add click listener to dismiss tooltip when clicking anywhere
+        document.addEventListener('click', (e: MouseEvent) => {
+          if (tooltipElement && tooltipElement.style.display !== 'none') {
+            // Don't hide if clicking on the tooltip itself or a badge
+            const target = e.target as HTMLElement;
+            if (
+              !tooltipElement.contains(target) &&
+              !target.classList.contains('jp-ai-summary-badge')
+            ) {
+              hideTooltip();
+            }
+          }
+        });
+      }
+      return tooltipElement;
+    };
+
+    // Show tooltip
+    const showTooltip = (text: string, x: number, y: number) => {
+      const tooltip = createTooltip();
+      tooltip.textContent = text;
+      tooltip.style.display = 'block';
+      tooltip.style.left = `${x + 10}px`;
+      tooltip.style.top = `${y + 10}px`;
+    };
+
+    // Hide tooltip
+    const hideTooltip = () => {
+      if (tooltipElement) {
+        tooltipElement.style.display = 'none';
+      }
+      currentHoverPath = null;
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout);
+        hoverTimeout = null;
+      }
+    };
+
+    // Check if a file should be summarized
+    const shouldSummarize = (
+      fileName: string,
+      isDirectory: boolean
+    ): boolean => {
+      if (isDirectory) {
+        return false;
+      }
+      return (
+        fileName.endsWith('.ipynb') ||
+        fileName.endsWith('.md') ||
+        fileName.endsWith('.txt') ||
+        fileName.endsWith('.py') ||
+        fileName.endsWith('.js') ||
+        fileName.endsWith('.ts')
+      );
+    };
+
+    // Create a badge with click tooltip for a file item
+    const createBadge = (
+      fileItem: Element,
+      fileName: string,
+      filePath: string,
+      isDirectory: boolean
+    ): HTMLSpanElement => {
+      const badge = document.createElement('span');
+      badge.className = 'jp-ai-summary-badge';
+      badge.textContent = '✨';
+      badge.title = 'Click to view AI summary';
+      badge.style.cursor = 'pointer';
+      badge.style.marginLeft = '6px';
+      badge.style.opacity = '0.7';
+      badge.style.fontSize = '14px';
+      badge.style.transition = 'opacity 0.2s';
+
+      badge.addEventListener('mouseenter', () => {
+        badge.style.opacity = '1';
+      });
+
+      badge.addEventListener('mouseleave', () => {
+        badge.style.opacity = '0.7';
+      });
+
+      badge.addEventListener('click', async (e: MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        currentHoverPath = filePath;
+
+        // Get badge position to anchor tooltip at bottom-right
+        const badgeRect = badge.getBoundingClientRect();
+        const anchorX = badgeRect.right;
+        const anchorY = badgeRect.bottom;
+
+        // Show loading message immediately
+        showTooltip('Loading summary...', anchorX, anchorY);
+
+        try {
+          let summary: string;
+
+          // Check cache first
+          if (summaryCache.has(filePath)) {
+            summary = summaryCache.get(filePath)!;
+            showTooltip(summary, anchorX, anchorY);
+          } else {
+            // Generate summary
+            if (fileName.endsWith('.ipynb')) {
+              summary = await summarizer.summarizeNotebook(filePath, app);
+            } else {
+              summary = await summarizer.summarizeTextFile(filePath, app);
+            }
+
+            // Cache the summary
+            summaryCache.set(filePath, summary);
+
+            // Show the summary if path hasn't changed
+            if (currentHoverPath === filePath) {
+              showTooltip(summary, anchorX, anchorY);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to generate summary:', error);
+          if (currentHoverPath === filePath) {
+            showTooltip('Failed to generate summary', anchorX, anchorY);
+          }
+        }
+      });
+
+      return badge;
+    };
+
+    // Add badges to file items
+    const addBadgesToFiles = () => {
+      const fileBrowser = fileBrowserFactory.tracker.currentWidget;
+      if (!fileBrowser) {
+        return;
+      }
+
+      const listing = fileBrowser.node.querySelector('.jp-DirListing-content');
+      if (!listing) {
+        return;
+      }
+
+      const fileItems = listing.querySelectorAll('.jp-DirListing-item');
+      fileItems.forEach(fileItem => {
+        // Skip if badge already exists
+        if (badgeMap.has(fileItem)) {
+          return;
+        }
+
+        const itemText = fileItem.querySelector('.jp-DirListing-itemText');
+        if (!itemText) {
+          return;
+        }
+
+        const fileName = itemText.textContent || '';
+
+        // Check if it's a directory by looking for the folder icon
+        const isDirectory = fileItem.querySelector('.jp-FolderIcon') !== null;
+
+        // Skip directories and incompatible file types
+        if (!shouldSummarize(fileName, isDirectory)) {
+          return;
+        }
+
+        // Get file path
+        const filePath = fileBrowser.model.path
+          ? `${fileBrowser.model.path}/${fileName}`
+          : fileName;
+
+        // Create and insert badge at the end (right of file name)
+        const badge = createBadge(fileItem, fileName, filePath, isDirectory);
+        itemText.appendChild(badge);
+        badgeMap.set(fileItem, badge);
+      });
+    };
+
+    // Setup listeners for file browser changes
+    const setupFileBrowserListeners = () => {
+      const fileBrowser = fileBrowserFactory.tracker.currentWidget;
+      if (!fileBrowser) {
+        return;
+      }
+
+      // Listen to file browser model changes
+      fileBrowser.model.fileChanged.connect(() => {
+        addBadgesToFiles();
+      });
+
+      // Listen to path changes (directory navigation)
+      fileBrowser.model.pathChanged.connect(() => {
+        addBadgesToFiles();
+      });
+
+      // Listen to refresh events
+      fileBrowser.model.refreshed.connect(() => {
+        addBadgesToFiles();
+      });
+
+      // Add badges to existing files
+      addBadgesToFiles();
+    };
+
+    // Wait for file browser to be ready
+    app.restored.then(() => {
+      setupFileBrowserListeners();
+
+      // Setup listeners when switching between file browsers
+      fileBrowserFactory.tracker.currentChanged.connect(() => {
+        setupFileBrowserListeners();
+      });
+    });
+
+    // Add command for manual summarization
+    app.commands.addCommand(CommandIDs.summarizeNotebook, {
+      label: 'Summarize with ChromeAI',
+      icon: textEditorIcon,
+      execute: async () => {
+        const fileBrowser = fileBrowserFactory.tracker.currentWidget;
+        if (!fileBrowser) {
+          Notification.emit('No file browser available', 'warning');
+          return;
+        }
+
+        const selectedItems = Array.from(fileBrowser.selectedItems());
+        if (selectedItems.length !== 1) {
+          Notification.emit('Please select a single file', 'warning');
+          return;
+        }
+
+        const selectedItem = selectedItems[0];
+        const filePath = selectedItem.path;
+
+        if (
+          !shouldSummarize(selectedItem.name, selectedItem.type === 'directory')
+        ) {
+          Notification.emit(
+            'Selected file type is not supported for summarization',
+            'warning'
+          );
+          return;
+        }
+
+        const notificationId = Notification.emit(
+          'Generating summary with ChromeAI...',
+          'in-progress',
+          { autoClose: false }
+        );
+
+        try {
+          let summary: string;
+          if (selectedItem.name.endsWith('.ipynb')) {
+            summary = await summarizer.summarizeNotebook(filePath, app);
+          } else {
+            summary = await summarizer.summarizeTextFile(filePath, app);
+          }
+
+          // Cache the summary
+          summaryCache.set(filePath, summary);
+
+          Notification.update({
+            id: notificationId,
+            message: 'Summary generated and copied to clipboard',
+            type: 'success',
+            autoClose: 3000
+          });
+
+          // Copy to clipboard
+          if (navigator.clipboard) {
+            await navigator.clipboard.writeText(summary);
+          }
+
+          // Show summary in a dialog
+          const result = await app.commands.execute('apputils:notify', {
+            message: summary,
+            type: 'default',
+            options: {
+              autoClose: false
+            }
+          });
+          console.log('Summary:', result);
+        } catch (error) {
+          console.error('ChromeAI Summary Generation Error:', error);
+          Notification.update({
+            id: notificationId,
+            message: `Failed to generate summary: ${
+              error instanceof Error ? error.message : 'Unknown error'
+            }`,
+            type: 'error',
+            autoClose: 5000
+          });
+        }
+      }
+    });
+
+    // Add context menu item
+    app.contextMenu.addItem({
+      command: CommandIDs.summarizeNotebook,
+      selector: '.jp-DirListing-item[data-file-type]',
+      rank: 3
+    });
+  }
+};
+
 export default [
   plugin,
   chromeAIImagePlugin,
   chromeAIAudioPlugin,
-  chromeAIProofreaderPlugin
+  chromeAIProofreaderPlugin,
+  chromeAISummarizerPlugin
 ];

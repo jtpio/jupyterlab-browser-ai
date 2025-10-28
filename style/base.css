@@ -3,3 +3,40 @@
 
     https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
+
+/* AI Summary Badge Styles */
+.jp-ai-summary-badge {
+  display: inline-block;
+  cursor: pointer;
+  margin-left: 6px;
+  opacity: 0.7;
+  font-size: 14px;
+  transition: opacity 0.2s;
+  user-select: none;
+}
+
+.jp-ai-summary-badge:hover {
+  opacity: 1;
+}
+
+/* AI Summary Tooltip Styles */
+.jp-ai-summary-tooltip {
+  font-family: var(--jp-ui-font-family);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  transition: opacity 0.2s ease-in-out;
+  z-index: 10000;
+  cursor: default;
+  pointer-events: auto;
+}
+
+.jp-ai-summary-tooltip::before {
+  content: '✨ AI Summary';
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: var(--jp-brand-color1);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
