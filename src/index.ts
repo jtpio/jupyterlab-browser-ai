@@ -578,13 +578,15 @@ class ChromeAISummarizer {
     notebookPath: string,
     app: JupyterFrontEnd
   ): Promise<string> {
-    const content = await app.serviceManager.contents.get(notebookPath);
+    const content = await app.serviceManager.contents.get(notebookPath, {
+      content: true
+    });
 
     if (content.type !== 'notebook') {
       throw new Error('Not a notebook file');
     }
 
-    const notebookContent = content.content as any;
+    const notebookContent = content.content;
     const cells = notebookContent.cells || [];
 
     const cellTexts: string[] = [];
