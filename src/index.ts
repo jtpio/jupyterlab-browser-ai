@@ -647,7 +647,9 @@ class ChromeAISummarizer {
     filePath: string,
     app: JupyterFrontEnd
   ): Promise<string> {
-    const content = await app.serviceManager.contents.get(filePath);
+    const content = await app.serviceManager.contents.get(filePath, {
+      content: true
+    });
 
     if (content.type !== 'file') {
       throw new Error('Not a file');
