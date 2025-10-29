@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.5.2
+
+([Full Changelog](https://github.com/jtpio/jupyterlab-browser-ai/compare/v0.5.1...5e39c2ffb67c3f5ac8f2c262a33c29f82da681f8))
+
+### Bugs fixed
+
+- Fix summarizer for files [#11](https://github.com/jtpio/jupyterlab-browser-ai/pull/11) ([@jtpio](https://github.com/jtpio))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jtpio/jupyterlab-browser-ai/graphs/contributors?from=2025-10-29&to=2025-10-29&type=c))
+
+[@jtpio](https://github.com/search?q=repo%3Ajtpio%2Fjupyterlab-browser-ai+involves%3Ajtpio+updated%3A2025-10-29..2025-10-29&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.5.1
 
 ([Full Changelog](https://github.com/jtpio/jupyterlab-browser-ai/compare/v0.5.0...305f1181481cb1f175418dc195f7fb7e5b7a8d5f))
@@ -15,8 +31,6 @@
 ([GitHub contributors page for this release](https://github.com/jtpio/jupyterlab-browser-ai/graphs/contributors?from=2025-10-28&to=2025-10-29&type=c))
 
 [@jtpio](https://github.com/search?q=repo%3Ajtpio%2Fjupyterlab-browser-ai+involves%3Ajtpio+updated%3A2025-10-28..2025-10-29&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.5.0
 
