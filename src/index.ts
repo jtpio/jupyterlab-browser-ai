@@ -83,8 +83,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         supportsHeaders: false,
         supportsToolCalling: true,
         factory: (options: { model?: string }) => {
-          const modelName =
-            options.model ?? 'Qwen3-0.6B-q4f16_1-MLC';
+          const modelName = options.model ?? 'Qwen3-0.6B-q4f16_1-MLC';
 
           let notificationId: string | null = null;
 
