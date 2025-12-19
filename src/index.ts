@@ -58,7 +58,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         defaultModels: ['chrome-ai'],
         supportsBaseURL: false,
         supportsHeaders: false,
-        supportsToolCalling: false,
+        supportsToolCalling: true,
         factory: () => {
           return builtInAI('text');
         }
@@ -81,10 +81,10 @@ const plugin: JupyterFrontEndPlugin<void> = {
         ],
         supportsBaseURL: false,
         supportsHeaders: false,
-        supportsToolCalling: false,
+        supportsToolCalling: true,
         factory: (options: { model?: string }) => {
           const modelName =
-            options.model ?? 'Llama-3.2-3B-Instruct-q4f16_1-MLC';
+            options.model ?? 'Qwen3-0.6B-q4f16_1-MLC';
 
           let notificationId: string | null = null;
 
