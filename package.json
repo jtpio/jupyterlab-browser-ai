@@ -53,8 +53,8 @@
         "watch:labextension": "jupyter labextension watch ."
     },
     "dependencies": {
-        "@built-in-ai/core": "^2.0.0",
-        "@built-in-ai/web-llm": "^0.2.2",
+        "@built-in-ai/core": "^2.1.0",
+        "@built-in-ai/web-llm": "^0.3.2",
         "@jupyterlab/application": "^4.0.0",
         "@jupyterlab/settingregistry": "^4.0.0",
         "@jupyterlab/ui-components": "^4.0.0",

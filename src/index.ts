@@ -58,7 +58,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         defaultModels: ['chrome-ai'],
         supportsBaseURL: false,
         supportsHeaders: false,
-        supportsToolCalling: false,
+        supportsToolCalling: true,
         factory: () => {
           return builtInAI('text');
         }
@@ -81,10 +81,10 @@ const plugin: JupyterFrontEndPlugin<void> = {
         ],
         supportsBaseURL: false,
         supportsHeaders: false,
-        supportsToolCalling: false,
+        supportsToolCalling: true,
         factory: (options: { model?: string }) => {
           const modelName =
-            options.model ?? 'Llama-3.2-3B-Instruct-q4f16_1-MLC';
+            options.model ?? 'Qwen3-0.6B-q4f16_1-MLC';
 
           let notificationId: string | null = null;
 
@@ -397,9 +397,8 @@ const chromeAIImagePlugin: JupyterFrontEndPlugin<void> = {
           console.error('ChromeAI Alt Text Generation Error:', error);
           Notification.update({
             id: notificationId,
-            message: `Failed to generate alt text: ${
-              error instanceof Error ? error.message : 'Unknown error'
-            }`,
+            message: `Failed to generate alt text: ${error instanceof Error ? error.message : 'Unknown error'
+              }`,
             type: 'error',
             autoClose: 5000
           });
@@ -554,9 +553,8 @@ const chromeAIAudioPlugin: JupyterFrontEndPlugin<void> = {
           console.error('ChromeAI Transcript Generation Error:', error);
           Notification.update({
             id: notificationId,
-            message: `Failed to generate transcript: ${
-              error instanceof Error ? error.message : 'Unknown error'
-            }`,
+            message: `Failed to generate transcript: ${error instanceof Error ? error.message : 'Unknown error'
+              }`,
             type: 'error',
             autoClose: 5000
           });
@@ -793,9 +791,8 @@ const chromeAIProofreaderPlugin: JupyterFrontEndPlugin<void> = {
           console.error('Proofreading Error:', error);
           Notification.update({
             id: notificationId,
-            message: `Failed to proofread: ${
-              error instanceof Error ? error.message : 'Unknown error'
-            }`,
+            message: `Failed to proofread: ${error instanceof Error ? error.message : 'Unknown error'
+              }`,
             type: 'error',
             autoClose: 5000
           });
