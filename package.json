@@ -60,8 +60,7 @@
         "@jupyterlab/ui-components": "^4.0.0",
         "@jupyterlite/ai": "^0.10.0",
         "@mlc-ai/web-llm": "^0.2.80",
-        "ai": "^6.0.0",
-        "zod": "^4.2.1"
+        "ai": "^6.0.0"
     },
     "devDependencies": {
         "@jupyterlab/builder": "^4.0.0",
