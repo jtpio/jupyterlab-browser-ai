@@ -54,7 +54,9 @@
     },
     "dependencies": {
         "@browser-ai/core": "^2.1.0",
+        "@browser-ai/transformers-js": "^2.1.0",
         "@browser-ai/web-llm": "^2.1.2",
+        "@huggingface/transformers": "^3.8.1",
         "@jupyterlab/application": "^4.5.4",
         "@jupyterlab/settingregistry": "^4.5.4",
         "@jupyterlab/ui-components": "^4.5.4",

@@ -10,13 +10,204 @@ import { MarkdownCell } from '@jupyterlab/cells';
 import { imageIcon, textEditorIcon } from '@jupyterlab/ui-components';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 
-import { IProviderRegistry, IProviderInfo } from '@jupyterlite/ai';
+import {
+  IProviderRegistry,
+  IProviderInfo,
+  IAISettingsModel
+} from '@jupyterlite/ai';
 
 import { browserAI, doesBrowserSupportBrowserAI } from '@browser-ai/core';
 
 import { webLLM, doesBrowserSupportWebLLM } from '@browser-ai/web-llm';
 
+import {
+  transformersJS,
+  doesBrowserSupportTransformersJS,
+  type TransformersJSLanguageModel
+} from '@browser-ai/transformers-js';
+
 import { streamText } from 'ai';
+
+interface IAISettingsModelLike {
+  providers: Array<{
+    id: string;
+    provider: string;
+    model: string;
+  }>;
+  stateChanged: {
+    connect: (
+      slot: (sender: unknown, args: void) => void,
+      thisArg?: unknown
+    ) => void;
+  };
+}
+
+const DEFAULT_TRANSFORMERS_MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';
+const DEFAULT_TRANSFORMERS_MODELS = [DEFAULT_TRANSFORMERS_MODEL];
+
+const transformersModels = new Map<string, TransformersJSLanguageModel>();
+const transformersModelInitialization = new Map<string, Promise<void>>();
+
+function getOrCreateTransformersModel(
+  modelName: string
+): TransformersJSLanguageModel {
+  let model = transformersModels.get(modelName);
+  if (!model) {
+    model = transformersJS(modelName, {
+      worker: new Worker(
+        new URL('./transformersjs-worker.js', import.meta.url),
+        {
+          type: 'module'
+        }
+      )
+    });
+    transformersModels.set(modelName, model);
+  }
+  return model;
+}
+
+function getTransformersProgressMessage(
+  modelName: string,
+  percentage: number
+): string {
+  if (percentage <= 0) {
+    return `Preparing ${modelName}...`;
+  }
+
+  return `Loading ${modelName}... ${percentage}%`;
+}
+
+async function initializeTransformersModel(
+  modelName: string,
+  notificationDelayMs = 1200
+): Promise<void> {
+  const existingInitialization = transformersModelInitialization.get(modelName);
+  if (existingInitialization) {
+    return existingInitialization;
+  }
+
+  const model = getOrCreateTransformersModel(modelName);
+
+  const initializationPromise = (async () => {
+    const availability = await model.availability();
+    if (availability === 'available') {
+      return;
+    }
+    if (availability === 'unavailable') {
+      throw new Error(`Model "${modelName}" is unavailable`);
+    }
+
+    let notificationId: string | null = null;
+    let latestProgress = 0;
+    let notificationDelayTimeout: number | null = null;
+
+    const ensureNotification = () => {
+      if (notificationId !== null) {
+        return;
+      }
+
+      const percentage = Math.round(latestProgress * 100);
+      notificationId = Notification.emit(
+        getTransformersProgressMessage(modelName, percentage),
+        'in-progress',
+        {
+          progress: latestProgress,
+          autoClose: false
+        }
+      );
+    };
+
+    notificationDelayTimeout = window.setTimeout(
+      () => ensureNotification(),
+      notificationDelayMs
+    );
+
+    try {
+      await model.createSessionWithProgress(progress => {
+        const clampedProgress = Math.max(0, Math.min(1, progress));
+        latestProgress = clampedProgress;
+
+        if (notificationId !== null) {
+          const percentage = Math.round(clampedProgress * 100);
+          Notification.update({
+            id: notificationId,
+            message: getTransformersProgressMessage(modelName, percentage),
+            progress: clampedProgress
+          });
+        }
+      });
+
+      if (notificationDelayTimeout !== null) {
+        clearTimeout(notificationDelayTimeout);
+        notificationDelayTimeout = null;
+      }
+
+      if (notificationId !== null) {
+        Notification.update({
+          id: notificationId,
+          message: `${modelName} ready`,
+          type: 'success',
+          progress: 1,
+          autoClose: 3000
+        });
+      }
+    } catch (error) {
+      if (notificationDelayTimeout !== null) {
+        clearTimeout(notificationDelayTimeout);
+        notificationDelayTimeout = null;
+      }
+
+      const errorMessage = `Failed to prepare ${modelName}: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`;
+
+      if (notificationId !== null) {
+        Notification.update({
+          id: notificationId,
+          message: errorMessage,
+          type: 'error',
+          autoClose: 5000
+        });
+      } else {
+        Notification.emit(errorMessage, 'error', { autoClose: 5000 });
+      }
+
+      throw error;
+    }
+  })();
+
+  transformersModelInitialization.set(modelName, initializationPromise);
+
+  initializationPromise.finally(() => {
+    transformersModelInitialization.delete(modelName);
+  });
+
+  return initializationPromise;
+}
+
+function preloadConfiguredTransformersModels(
+  settingsModel: IAISettingsModelLike
+): void {
+  const modelNames = new Set(
+    settingsModel.providers
+      .filter(
+        provider =>
+          provider.provider === 'transformers-js' &&
+          typeof provider.model === 'string' &&
+          provider.model.trim() !== ''
+      )
+      .map(provider => provider.model.trim())
+  );
+
+  for (const modelName of modelNames) {
+    void initializeTransformersModel(modelName).catch(error => {
+      console.error(
+        `Failed to initialize Transformers.js model "${modelName}"`,
+        error
+      );
+    });
+  }
+}
 
 /**
  * Utility function to efficiently convert a blob to base64 string
@@ -44,11 +235,12 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description: 'In-browser AI in JupyterLab and Jupyter Notebook',
   autoStart: true,
   requires: [IProviderRegistry],
-  optional: [ISettingRegistry],
+  optional: [ISettingRegistry, IAISettingsModel],
   activate: (
     app: JupyterFrontEnd,
     providerRegistry: IProviderRegistry,
-    settingRegistry: ISettingRegistry | null
+    settingRegistry: ISettingRegistry | null,
+    settingsModel: IAISettingsModelLike | null
   ) => {
     if (doesBrowserSupportBrowserAI()) {
       const chromeAIInfo: IProviderInfo = {
@@ -129,6 +321,51 @@ const plugin: JupyterFrontEndPlugin<void> = {
         }
       };
       providerRegistry.registerProvider(webLLMInfo);
+    }
+
+    if (doesBrowserSupportTransformersJS()) {
+      const transformersInfo: IProviderInfo = {
+        id: 'transformers-js',
+        name: 'Transformers.js',
+        apiKeyRequirement: 'none',
+        defaultModels: DEFAULT_TRANSFORMERS_MODELS,
+        supportsBaseURL: false,
+        supportsHeaders: false,
+        supportsToolCalling: true,
+        factory: (options: { model?: string }) => {
+          const modelName = options.model ?? DEFAULT_TRANSFORMERS_MODEL;
+          const model = getOrCreateTransformersModel(modelName);
+
+          // Pre-initialize when a model instance is created (e.g. restored chats)
+          // so first user message is less likely to block on model load.
+          void initializeTransformersModel(modelName, 2000).catch(error => {
+            console.error(
+              `Failed to initialize Transformers.js model "${modelName}"`,
+              error
+            );
+          });
+
+          return model;
+        }
+      };
+      providerRegistry.registerProvider(transformersInfo);
+
+      if (settingsModel) {
+        let appLayoutRestored = false;
+
+        void app.restored.then(() => {
+          appLayoutRestored = true;
+        });
+
+        settingsModel.stateChanged.connect(() => {
+          // Ignore initial settings hydration on startup. Only preload when
+          // users update provider configuration in the UI.
+          if (!appLayoutRestored) {
+            return;
+          }
+          preloadConfiguredTransformersModels(settingsModel);
+        });
+      }
     }
 
     if (settingRegistry) {
