@@ -53,17 +53,17 @@
         "watch:labextension": "jupyter labextension watch ."
     },
     "dependencies": {
-        "@built-in-ai/core": "^3.0.1",
-        "@built-in-ai/web-llm": "^1.0.1",
-        "@jupyterlab/application": "^4.0.0",
-        "@jupyterlab/settingregistry": "^4.0.0",
-        "@jupyterlab/ui-components": "^4.0.0",
-        "@jupyterlite/ai": "^0.10.0",
+        "@browser-ai/core": "^2.1.0",
+        "@browser-ai/web-llm": "^2.1.2",
+        "@jupyterlab/application": "^4.5.4",
+        "@jupyterlab/settingregistry": "^4.5.4",
+        "@jupyterlab/ui-components": "^4.5.4",
+        "@jupyterlite/ai": "^0.12.0",
         "@mlc-ai/web-llm": "^0.2.80",
-        "ai": "^6.0.0"
+        "ai": "^6.0.82"
     },
     "devDependencies": {
-        "@jupyterlab/builder": "^4.0.0",
+        "@jupyterlab/builder": "^4.5.4",
         "@types/dom-chromium-ai": "^0.0.10",
         "@types/json-schema": "^7.0.11",
         "@types/react": "^18.0.26",
