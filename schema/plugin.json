@@ -3,6 +3,16 @@
   "title": "jupyterlab-browser-ai",
   "description": "jupyterlab-browser-ai settings.",
   "type": "object",
-  "properties": {},
+  "properties": {
+    "transformersJsModels": {
+      "title": "Additional Transformers.js Models",
+      "description": "Extra Hugging Face model IDs to show in the Transformers.js model dropdown. Browse model names at https://huggingface.co/models?library=transformers.js&pipeline_tag=text-generation&sort=downloads",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
   "additionalProperties": false
 }

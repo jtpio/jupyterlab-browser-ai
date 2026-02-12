@@ -42,8 +42,93 @@ interface IAISettingsModelLike {
   };
 }
 
-const DEFAULT_TRANSFORMERS_MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';
-const DEFAULT_TRANSFORMERS_MODELS = [DEFAULT_TRANSFORMERS_MODEL];
+const DEFAULT_TRANSFORMERS_MODEL = 'onnx-community/Qwen2.5-Coder-0.5B-Instruct';
+const TRANSFORMERS_CUSTOM_MODELS_SETTING = 'transformersJsModels';
+const DEFAULT_TRANSFORMERS_MODELS = [
+  DEFAULT_TRANSFORMERS_MODEL,
+  'onnx-community/Qwen2.5-0.5B-Instruct',
+  'HuggingFaceTB/SmolLM2-360M-Instruct'
+];
+const TRANSFORMERS_PROVIDER_DESCRIPTION =
+  'Small on-device models for notebook and code workflows. Add custom model IDs in the "transformersJsModels" setting.';
+const MODEL_PRELOAD_NOTIFICATION_DELAY_MS = 1200;
+const FACTORY_INIT_NOTIFICATION_DELAY_MS = 2000;
+
+type TransformersModelSettings = NonNullable<
+  Parameters<typeof transformersJS>[1]
+>;
+
+const TRANSFORMERS_MODEL_SETTINGS_BY_ID: Record<
+  string,
+  Partial<Pick<TransformersModelSettings, 'dtype' | 'device'>>
+> = {
+  // ONNX community model cards recommend q4 for Qwen2.5 coder/instruct.
+  'onnx-community/Qwen2.5-Coder-0.5B-Instruct': { dtype: 'q4' },
+  'onnx-community/Qwen2.5-0.5B-Instruct': { dtype: 'q4' },
+  // Qwen3 ONNX cards recommend q4f16 for browser usage.
+  'onnx-community/Qwen3-0.6B-ONNX': { dtype: 'q4f16' }
+};
+
+function normalizeTransformersModelName(modelName: unknown): string | null {
+  if (typeof modelName !== 'string') {
+    return null;
+  }
+
+  const normalizedModelName = modelName.trim();
+  if (normalizedModelName === '') {
+    return null;
+  }
+
+  return normalizedModelName;
+}
+
+function getConfiguredTransformersModelNames(
+  settingsModel: IAISettingsModelLike
+): string[] {
+  const modelNames = new Set<string>();
+
+  for (const provider of settingsModel.providers) {
+    if (provider.provider !== 'transformers-js') {
+      continue;
+    }
+
+    const modelName = normalizeTransformersModelName(provider.model);
+    if (modelName) {
+      modelNames.add(modelName);
+    }
+  }
+
+  return [...modelNames];
+}
+
+function getUserConfiguredTransformersModelNames(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const modelNames = new Set<string>();
+
+  for (const entry of value) {
+    const modelName = normalizeTransformersModelName(entry);
+    if (modelName) {
+      modelNames.add(modelName);
+    }
+  }
+
+  return [...modelNames];
+}
+
+function mergeTransformersModelNames(...modelLists: string[][]): string[] {
+  const modelNames = new Set<string>();
+
+  for (const modelList of modelLists) {
+    for (const modelName of modelList) {
+      modelNames.add(modelName);
+    }
+  }
+
+  return [...modelNames];
+}
 
 const transformersModels = new Map<string, TransformersJSLanguageModel>();
 const transformersModelInitialization = new Map<string, Promise<void>>();
@@ -53,7 +138,9 @@ function getOrCreateTransformersModel(
 ): TransformersJSLanguageModel {
   let model = transformersModels.get(modelName);
   if (!model) {
+    const modelSettings = TRANSFORMERS_MODEL_SETTINGS_BY_ID[modelName] ?? {};
     model = transformersJS(modelName, {
+      ...modelSettings,
       worker: new Worker(
         new URL('./transformersjs-worker.js', import.meta.url),
         {
@@ -77,9 +164,24 @@ function getTransformersProgressMessage(
   return `Loading ${modelName}... ${percentage}%`;
 }
 
+function getTransformersInitializationErrorMessage(
+  modelName: string,
+  error: unknown
+): string {
+  const rawMessage = error instanceof Error ? error.message : String(error);
+  const trimmedRawMessage = rawMessage.trim();
+
+  // Some worker/runtime failures surface as numeric abort codes.
+  if (/^\d+$/.test(trimmedRawMessage)) {
+    return `Failed to prepare ${modelName}: worker runtime error (${trimmedRawMessage}). Try another model.`;
+  }
+
+  return `Failed to prepare ${modelName}: ${trimmedRawMessage || 'Unknown error'}`;
+}
+
 async function initializeTransformersModel(
   modelName: string,
-  notificationDelayMs = 1200
+  notificationDelayMs = MODEL_PRELOAD_NOTIFICATION_DELAY_MS
 ): Promise<void> {
   const existingInitialization = transformersModelInitialization.get(modelName);
   if (existingInitialization) {
@@ -157,9 +259,10 @@ async function initializeTransformersModel(
         notificationDelayTimeout = null;
       }
 
-      const errorMessage = `Failed to prepare ${modelName}: ${
-        error instanceof Error ? error.message : 'Unknown error'
-      }`;
+      const errorMessage = getTransformersInitializationErrorMessage(
+        modelName,
+        error
+      );
 
       if (notificationId !== null) {
         Notification.update({
@@ -188,16 +291,7 @@ async function initializeTransformersModel(
 function preloadConfiguredTransformersModels(
   settingsModel: IAISettingsModelLike
 ): void {
-  const modelNames = new Set(
-    settingsModel.providers
-      .filter(
-        provider =>
-          provider.provider === 'transformers-js' &&
-          typeof provider.model === 'string' &&
-          provider.model.trim() !== ''
-      )
-      .map(provider => provider.model.trim())
-  );
+  const modelNames = getConfiguredTransformersModelNames(settingsModel);
 
   for (const modelName of modelNames) {
     void initializeTransformersModel(modelName).catch(error => {
@@ -242,6 +336,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
     settingRegistry: ISettingRegistry | null,
     settingsModel: IAISettingsModelLike | null
   ) => {
+    let userConfiguredTransformersModels: string[] = [];
+    let refreshTransformersDefaultModels: (() => void) | null = null;
+
     if (doesBrowserSupportBrowserAI()) {
       const chromeAIInfo: IProviderInfo = {
         id: 'chrome-ai',
@@ -328,7 +425,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
         id: 'transformers-js',
         name: 'Transformers.js',
         apiKeyRequirement: 'none',
-        defaultModels: DEFAULT_TRANSFORMERS_MODELS,
+        defaultModels: [...DEFAULT_TRANSFORMERS_MODELS],
+        description: TRANSFORMERS_PROVIDER_DESCRIPTION,
         supportsBaseURL: false,
         supportsHeaders: false,
         supportsToolCalling: true,
@@ -338,7 +436,10 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
           // Pre-initialize when a model instance is created (e.g. restored chats)
           // so first user message is less likely to block on model load.
-          void initializeTransformersModel(modelName, 2000).catch(error => {
+          void initializeTransformersModel(
+            modelName,
+            FACTORY_INIT_NOTIFICATION_DELAY_MS
+          ).catch(error => {
             console.error(
               `Failed to initialize Transformers.js model "${modelName}"`,
               error
@@ -350,6 +451,31 @@ const plugin: JupyterFrontEndPlugin<void> = {
       };
       providerRegistry.registerProvider(transformersInfo);
 
+      refreshTransformersDefaultModels = () => {
+        const providerInfo =
+          providerRegistry.getProviderInfo('transformers-js');
+        if (!providerInfo) {
+          return;
+        }
+
+        const configuredModels = settingsModel
+          ? getConfiguredTransformersModelNames(settingsModel)
+          : [];
+        const mergedModels = mergeTransformersModelNames(
+          DEFAULT_TRANSFORMERS_MODELS,
+          userConfiguredTransformersModels,
+          configuredModels
+        );
+
+        providerInfo.defaultModels.splice(
+          0,
+          providerInfo.defaultModels.length,
+          ...mergedModels
+        );
+      };
+
+      refreshTransformersDefaultModels();
+
       if (settingsModel) {
         let appLayoutRestored = false;
 
@@ -358,6 +484,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
         });
 
         settingsModel.stateChanged.connect(() => {
+          refreshTransformersDefaultModels?.();
+
           // Ignore initial settings hydration on startup. Only preload when
           // users update provider configuration in the UI.
           if (!appLayoutRestored) {
@@ -369,13 +497,22 @@ const plugin: JupyterFrontEndPlugin<void> = {
     }
 
     if (settingRegistry) {
-      settingRegistry
+      void settingRegistry
         .load(plugin.id)
         .then(settings => {
-          console.log(
-            'jupyterlab-browser-ai settings loaded:',
-            settings.composite
-          );
+          const updateUserConfiguredTransformersModels = () => {
+            const composite = settings.composite as Record<string, unknown>;
+            userConfiguredTransformersModels =
+              getUserConfiguredTransformersModelNames(
+                composite[TRANSFORMERS_CUSTOM_MODELS_SETTING]
+              );
+            refreshTransformersDefaultModels?.();
+          };
+
+          updateUserConfiguredTransformersModels();
+          settings.changed.connect(() => {
+            updateUserConfiguredTransformersModels();
+          });
         })
         .catch(reason => {
           console.error(
