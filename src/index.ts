@@ -12,9 +12,9 @@ import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 
 import { IProviderRegistry, IProviderInfo } from '@jupyterlite/ai';
 
-import { builtInAI, doesBrowserSupportBuiltInAI } from '@built-in-ai/core';
+import { browserAI, doesBrowserSupportBrowserAI } from '@browser-ai/core';
 
-import { webLLM, doesBrowserSupportWebLLM } from '@built-in-ai/web-llm';
+import { webLLM, doesBrowserSupportWebLLM } from '@browser-ai/web-llm';
 
 import { streamText } from 'ai';
 
@@ -50,7 +50,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     providerRegistry: IProviderRegistry,
     settingRegistry: ISettingRegistry | null
   ) => {
-    if (doesBrowserSupportBuiltInAI()) {
+    if (doesBrowserSupportBrowserAI()) {
       const chromeAIInfo: IProviderInfo = {
         id: 'chrome-ai',
         name: 'Chrome Built-in AI',
@@ -60,7 +60,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         supportsHeaders: false,
         supportsToolCalling: true,
         factory: () => {
-          return builtInAI('text');
+          return browserAI('text');
         }
       };
 
@@ -178,7 +178,7 @@ class ChromeAIAltTextGenerator {
       const base64 = await blobToBase64(blob);
 
       const result = streamText({
-        model: builtInAI(),
+        model: browserAI(),
         messages: [
           {
             role: 'user',
@@ -218,7 +218,7 @@ class ChromeAITranscriptGenerator {
       const base64 = await blobToBase64(blob);
 
       const result = streamText({
-        model: builtInAI(),
+        model: browserAI(),
         messages: [
           {
             role: 'user',
@@ -343,7 +343,7 @@ const chromeAIImagePlugin: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   requires: [INotebookTracker],
   activate: (app: JupyterFrontEnd, notebookTracker: INotebookTracker) => {
-    if (!doesBrowserSupportBuiltInAI()) {
+    if (!doesBrowserSupportBrowserAI()) {
       console.log('Chrome Built-in AI not supported in this browser');
       return;
     }
@@ -466,7 +466,7 @@ const chromeAIAudioPlugin: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   requires: [IFileBrowserFactory],
   activate: (app: JupyterFrontEnd, fileBrowserFactory: IFileBrowserFactory) => {
-    if (!doesBrowserSupportBuiltInAI()) {
+    if (!doesBrowserSupportBrowserAI()) {
       console.log('Chrome Built-in AI not supported in this browser');
       return;
     }
