@@ -43,6 +43,42 @@ For example:
 }
 ```
 
+## WebLLM models
+
+WebLLM model IDs can be discovered in the WebLLM prebuilt model config:
+
+- https://github.com/mlc-ai/web-llm/blob/main/src/config.ts (look for `prebuiltAppConfig.model_list[].model_id`)
+- https://mlc.ai/models (catalog of MLC models; WebLLM supports a subset)
+
+To print the model IDs from the exact `@mlc-ai/web-llm` version installed in this project:
+
+```bash
+node -e "import('@mlc-ai/web-llm').then(w => console.log(w.prebuiltAppConfig.model_list.map(m => m.model_id).join('\n')))"
+```
+
+By default, this extension uses:
+
+- `Llama-3.2-3B-Instruct-q4f16_1-MLC`
+- `Llama-3.2-1B-Instruct-q4f16_1-MLC`
+- `Phi-3.5-mini-instruct-q4f16_1-MLC`
+- `gemma-2-2b-it-q4f16_1-MLC`
+- `Qwen3-0.6B-q4f16_1-MLC`
+
+The `webLLMModels` setting in `jupyterlab-browser-ai` controls the full
+WebLLM model dropdown list. If you set it, your list replaces the defaults.
+
+For example:
+
+```json
+{
+  "webLLMModels": [
+    "Qwen3-0.6B-q4f16_1-MLC",
+    "Llama-3.2-1B-Instruct-q4f16_1-MLC",
+    "gemma-2-2b-it-q4f16_1-MLC"
+  ]
+}
+```
+
 ## Uninstall
 
 To remove the extension, execute:
