@@ -22,16 +22,23 @@ Transformers.js model IDs can be discovered on Hugging Face:
 
 - https://huggingface.co/models?library=transformers.js&pipeline_tag=text-generation&sort=downloads
 
-In the provider dialog, this extension exposes a curated default list.
+By default, this extension uses:
 
-To add your own model IDs (while keeping the defaults), configure the
-`transformersJsModels` setting for `jupyterlab-browser-ai`, for example:
+- `onnx-community/Qwen2.5-Coder-0.5B-Instruct`
+- `onnx-community/Qwen2.5-0.5B-Instruct`
+- `HuggingFaceTB/SmolLM2-360M-Instruct`
+
+The `transformersJsModels` setting for `jupyterlab-browser-ai` controls the
+full dropdown list. If you set it, your list replaces the defaults.
+
+For example:
 
 ```json
 {
   "transformersJsModels": [
     "onnx-community/Qwen3-0.6B-ONNX",
-    "your-org/your-custom-model"
+    "your-org/your-custom-model",
+    "HuggingFaceTB/SmolLM2-360M-Instruct"
   ]
 }
 ```

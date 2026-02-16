@@ -37,15 +37,9 @@ interface IAISettingsModelLike {
 }
 
 const PLUGIN_ID = 'jupyterlab-browser-ai:plugin';
-const DEFAULT_TRANSFORMERS_MODEL = 'onnx-community/Qwen2.5-Coder-0.5B-Instruct';
 const TRANSFORMERS_CUSTOM_MODELS_SETTING = 'transformersJsModels';
-const DEFAULT_TRANSFORMERS_MODELS = [
-  DEFAULT_TRANSFORMERS_MODEL,
-  'onnx-community/Qwen2.5-0.5B-Instruct',
-  'HuggingFaceTB/SmolLM2-360M-Instruct'
-];
 const TRANSFORMERS_PROVIDER_DESCRIPTION =
-  'Small on-device models for notebook and code workflows. Add custom model IDs in the "transformersJsModels" setting.';
+  'Small on-device models for notebook and code workflows. Configure model IDs in the "transformersJsModels" setting.';
 const MODEL_PRELOAD_NOTIFICATION_DELAY_MS = 1200;
 const FACTORY_INIT_NOTIFICATION_DELAY_MS = 2000;
 
@@ -106,18 +100,6 @@ function getUserConfiguredTransformersModelNames(value: unknown): string[] {
   for (const entry of value) {
     const modelName = normalizeTransformersModelName(entry);
     if (modelName) {
-      modelNames.add(modelName);
-    }
-  }
-
-  return [...modelNames];
-}
-
-function mergeTransformersModelNames(...modelLists: string[][]): string[] {
-  const modelNames = new Set<string>();
-
-  for (const modelList of modelLists) {
-    for (const modelName of modelList) {
       modelNames.add(modelName);
     }
   }
@@ -313,7 +295,7 @@ export const providerRegistryPlugin: JupyterFrontEndPlugin<void> = {
     settingRegistry: ISettingRegistry | null,
     settingsModel: IAISettingsModelLike | null
   ) => {
-    let userConfiguredTransformersModels: string[] = [];
+    let configuredTransformersModels: string[] = [];
     let refreshTransformersDefaultModels: (() => void) | null = null;
 
     if (doesBrowserSupportBrowserAI()) {
@@ -398,60 +380,88 @@ export const providerRegistryPlugin: JupyterFrontEndPlugin<void> = {
     }
 
     if (doesBrowserSupportTransformersJS()) {
-      const transformersInfo: IProviderInfo = {
-        id: 'transformers-js',
-        name: 'Transformers.js',
-        apiKeyRequirement: 'none',
-        defaultModels: [...DEFAULT_TRANSFORMERS_MODELS],
-        description: TRANSFORMERS_PROVIDER_DESCRIPTION,
-        supportsBaseURL: false,
-        supportsHeaders: false,
-        supportsToolCalling: true,
-        factory: (options: { model?: string }) => {
-          const modelName = options.model ?? DEFAULT_TRANSFORMERS_MODEL;
-          const model = getOrCreateTransformersModel(modelName);
+      const registerTransformersProvider = () => {
+        const transformersInfo: IProviderInfo = {
+          id: 'transformers-js',
+          name: 'Transformers.js',
+          apiKeyRequirement: 'none',
+          defaultModels: [...configuredTransformersModels],
+          description: TRANSFORMERS_PROVIDER_DESCRIPTION,
+          supportsBaseURL: false,
+          supportsHeaders: false,
+          supportsToolCalling: true,
+          factory: (options: { model?: string }) => {
+            const modelName = options.model ?? configuredTransformersModels[0];
+            if (!modelName) {
+              throw new Error(
+                'No Transformers.js model configured. Set "transformersJsModels" in jupyterlab-browser-ai settings.'
+              );
+            }
+            const model = getOrCreateTransformersModel(modelName);
 
-          // Pre-initialize when a model instance is created (e.g. restored chats)
-          // so first user message is less likely to block on model load.
-          void initializeTransformersModel(
-            modelName,
-            FACTORY_INIT_NOTIFICATION_DELAY_MS
-          ).catch(error => {
+            // Pre-initialize when a model instance is created (e.g. restored chats)
+            // so first user message is less likely to block on model load.
+            void initializeTransformersModel(
+              modelName,
+              FACTORY_INIT_NOTIFICATION_DELAY_MS
+            ).catch(error => {
+              console.error(
+                `Failed to initialize Transformers.js model "${modelName}"`,
+                error
+              );
+            });
+
+            return model;
+          }
+        };
+        providerRegistry.registerProvider(transformersInfo);
+
+        refreshTransformersDefaultModels = () => {
+          const providerInfo =
+            providerRegistry.getProviderInfo('transformers-js');
+          if (!providerInfo) {
+            return;
+          }
+
+          providerInfo.defaultModels.splice(
+            0,
+            providerInfo.defaultModels.length,
+            ...configuredTransformersModels
+          );
+        };
+
+        refreshTransformersDefaultModels();
+      };
+
+      if (settingRegistry) {
+        void settingRegistry
+          .load(PLUGIN_ID)
+          .then(settings => {
+            const updateConfiguredTransformersModels = () => {
+              const composite = settings.composite as Record<string, unknown>;
+              configuredTransformersModels =
+                getUserConfiguredTransformersModelNames(
+                  composite[TRANSFORMERS_CUSTOM_MODELS_SETTING]
+                );
+              refreshTransformersDefaultModels?.();
+            };
+
+            updateConfiguredTransformersModels();
+            registerTransformersProvider();
+            settings.changed.connect(() => {
+              updateConfiguredTransformersModels();
+            });
+          })
+          .catch(reason => {
             console.error(
-              `Failed to initialize Transformers.js model "${modelName}"`,
-              error
+              'Failed to load settings for jupyterlab-browser-ai.',
+              reason
             );
+            registerTransformersProvider();
           });
-
-          return model;
-        }
-      };
-      providerRegistry.registerProvider(transformersInfo);
-
-      refreshTransformersDefaultModels = () => {
-        const providerInfo =
-          providerRegistry.getProviderInfo('transformers-js');
-        if (!providerInfo) {
-          return;
-        }
-
-        const configuredModels = settingsModel
-          ? getConfiguredTransformersModelNames(settingsModel)
-          : [];
-        const mergedModels = mergeTransformersModelNames(
-          DEFAULT_TRANSFORMERS_MODELS,
-          userConfiguredTransformersModels,
-          configuredModels
-        );
-
-        providerInfo.defaultModels.splice(
-          0,
-          providerInfo.defaultModels.length,
-          ...mergedModels
-        );
-      };
-
-      refreshTransformersDefaultModels();
+      } else {
+        registerTransformersProvider();
+      }
 
       if (settingsModel) {
         let appLayoutRestored = false;
@@ -461,8 +471,6 @@ export const providerRegistryPlugin: JupyterFrontEndPlugin<void> = {
         });
 
         settingsModel.stateChanged.connect(() => {
-          refreshTransformersDefaultModels?.();
-
           // Ignore initial settings hydration on startup. Only preload when
           // users update provider configuration in the UI.
           if (!appLayoutRestored) {
@@ -471,32 +479,6 @@ export const providerRegistryPlugin: JupyterFrontEndPlugin<void> = {
           preloadConfiguredTransformersModels(settingsModel);
         });
       }
-    }
-
-    if (settingRegistry) {
-      void settingRegistry
-        .load(PLUGIN_ID)
-        .then(settings => {
-          const updateUserConfiguredTransformersModels = () => {
-            const composite = settings.composite as Record<string, unknown>;
-            userConfiguredTransformersModels =
-              getUserConfiguredTransformersModelNames(
-                composite[TRANSFORMERS_CUSTOM_MODELS_SETTING]
-              );
-            refreshTransformersDefaultModels?.();
-          };
-
-          updateUserConfiguredTransformersModels();
-          settings.changed.connect(() => {
-            updateUserConfiguredTransformersModels();
-          });
-        })
-        .catch(reason => {
-          console.error(
-            'Failed to load settings for jupyterlab-browser-ai.',
-            reason
-          );
-        });
     }
   }
 };
