@@ -48,7 +48,7 @@ For example:
 WebLLM model IDs can be discovered in the WebLLM prebuilt model config:
 
 - https://github.com/mlc-ai/web-llm/blob/main/src/config.ts (look for `prebuiltAppConfig.model_list[].model_id`)
-- https://mlc.ai/models (catalog of MLC models; WebLLM supports a subset)
+- https://webllm.mlc.ai/docs/user/basic_usage.html#model-records-in-webllm (official WebLLM docs)
 
 To print the model IDs from the exact `@mlc-ai/web-llm` version installed in this project:
 
