@@ -3,6 +3,20 @@
   "title": "jupyterlab-browser-ai",
   "description": "jupyterlab-browser-ai settings.",
   "type": "object",
-  "properties": {},
+  "properties": {
+    "transformersJsModels": {
+      "title": "Transformers.js Models",
+      "description": "Hugging Face model IDs shown in the Transformers.js model dropdown. This setting controls the full list. Browse model names at https://huggingface.co/models?library=transformers.js&pipeline_tag=text-generation&sort=downloads",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "onnx-community/Qwen2.5-Coder-0.5B-Instruct",
+        "onnx-community/Qwen2.5-0.5B-Instruct",
+        "HuggingFaceTB/SmolLM2-360M-Instruct"
+      ]
+    }
+  },
   "additionalProperties": false
 }

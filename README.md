@@ -16,6 +16,33 @@ To install the extension, execute:
 pip install jupyterlab_browser_ai
 ```
 
+## Transformers.js models
+
+Transformers.js model IDs can be discovered on Hugging Face:
+
+- https://huggingface.co/models?library=transformers.js&pipeline_tag=text-generation&sort=downloads
+
+By default, this extension uses:
+
+- `onnx-community/Qwen2.5-Coder-0.5B-Instruct`
+- `onnx-community/Qwen2.5-0.5B-Instruct`
+- `HuggingFaceTB/SmolLM2-360M-Instruct`
+
+The `transformersJsModels` setting for `jupyterlab-browser-ai` controls the
+full dropdown list. If you set it, your list replaces the defaults.
+
+For example:
+
+```json
+{
+  "transformersJsModels": [
+    "onnx-community/Qwen3-0.6B-ONNX",
+    "your-org/your-custom-model",
+    "HuggingFaceTB/SmolLM2-360M-Instruct"
+  ]
+}
+```
+
 ## Uninstall
 
 To remove the extension, execute:
