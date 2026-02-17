@@ -4,6 +4,21 @@
   "description": "jupyterlab-browser-ai settings.",
   "type": "object",
   "properties": {
+    "webLLMModels": {
+      "title": "WebLLM Models",
+      "description": "WebLLM model IDs shown in the WebLLM model dropdown. This setting controls the full list.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "Llama-3.2-3B-Instruct-q4f16_1-MLC",
+        "Llama-3.2-1B-Instruct-q4f16_1-MLC",
+        "Phi-3.5-mini-instruct-q4f16_1-MLC",
+        "gemma-2-2b-it-q4f16_1-MLC",
+        "Qwen3-0.6B-q4f16_1-MLC"
+      ]
+    },
     "transformersJsModels": {
       "title": "Transformers.js Models",
       "description": "Hugging Face model IDs shown in the Transformers.js model dropdown. This setting controls the full list. Browse model names at https://huggingface.co/models?library=transformers.js&pipeline_tag=text-generation&sort=downloads",

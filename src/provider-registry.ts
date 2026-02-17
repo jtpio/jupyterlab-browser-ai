@@ -14,7 +14,11 @@ import {
 
 import { browserAI, doesBrowserSupportBrowserAI } from '@browser-ai/core';
 
-import { webLLM, doesBrowserSupportWebLLM } from '@browser-ai/web-llm';
+import {
+  webLLM,
+  doesBrowserSupportWebLLM,
+  type WebLLMLanguageModel
+} from '@browser-ai/web-llm';
 
 import {
   transformersJS,
@@ -37,11 +41,124 @@ interface IAISettingsModelLike {
 }
 
 const PLUGIN_ID = 'jupyterlab-browser-ai:plugin';
+const WEBLLM_CUSTOM_MODELS_SETTING = 'webLLMModels';
 const TRANSFORMERS_CUSTOM_MODELS_SETTING = 'transformersJsModels';
+const WEBLLM_PROVIDER_DESCRIPTION =
+  'On-device browser models accelerated with WebGPU. Configure model IDs in the "webLLMModels" setting.';
 const TRANSFORMERS_PROVIDER_DESCRIPTION =
   'Small on-device models for notebook and code workflows. Configure model IDs in the "transformersJsModels" setting.';
 const MODEL_PRELOAD_NOTIFICATION_DELAY_MS = 1200;
 const FACTORY_INIT_NOTIFICATION_DELAY_MS = 2000;
+
+const webLLMModels = new Map<string, WebLLMLanguageModel>();
+const webLLMModelInitialization = new Map<string, Promise<void>>();
+
+function getOrCreateWebLLMModel(modelName: string): WebLLMLanguageModel {
+  let model = webLLMModels.get(modelName);
+  if (!model) {
+    let notificationId: string | null = null;
+
+    model = webLLM(modelName, {
+      worker: new Worker(new URL('./webllm-worker.js', import.meta.url), {
+        type: 'module'
+      }),
+      initProgressCallback: report => {
+        const clampedProgress = Math.max(0, Math.min(1, report.progress));
+        const percentage = Math.round(clampedProgress * 100);
+        const progressMessage =
+          report.text ?? getWebLLMProgressMessage(modelName, percentage);
+
+        if (notificationId === null) {
+          notificationId = Notification.emit(progressMessage, 'in-progress', {
+            progress: clampedProgress,
+            autoClose: false
+          });
+        } else if (percentage === 100) {
+          Notification.update({
+            id: notificationId,
+            message: `${modelName} ready`,
+            type: 'success',
+            progress: 1,
+            autoClose: 3000
+          });
+        } else {
+          Notification.update({
+            id: notificationId,
+            message: progressMessage,
+            progress: clampedProgress
+          });
+        }
+      }
+    });
+
+    webLLMModels.set(modelName, model);
+  }
+
+  return model;
+}
+
+function getWebLLMProgressMessage(
+  modelName: string,
+  percentage: number
+): string {
+  if (percentage <= 0) {
+    return `Preparing ${modelName}...`;
+  }
+
+  return `Downloading ${modelName}... ${percentage}%`;
+}
+
+function getWebLLMInitializationErrorMessage(
+  modelName: string,
+  error: unknown
+): string {
+  const rawMessage = error instanceof Error ? error.message : String(error);
+  const trimmedRawMessage = rawMessage.trim();
+
+  if (/^\d+$/.test(trimmedRawMessage)) {
+    return `Failed to prepare ${modelName}: worker runtime error (${trimmedRawMessage}). Try another model.`;
+  }
+
+  return `Failed to prepare ${modelName}: ${trimmedRawMessage || 'Unknown error'}`;
+}
+
+async function initializeWebLLMModel(modelName: string): Promise<void> {
+  const existingInitialization = webLLMModelInitialization.get(modelName);
+  if (existingInitialization) {
+    return existingInitialization;
+  }
+
+  const model = getOrCreateWebLLMModel(modelName);
+
+  const initializationPromise = (async () => {
+    const availability = await model.availability();
+    if (availability === 'available') {
+      return;
+    }
+    if (availability === 'unavailable') {
+      throw new Error(`Model "${modelName}" is unavailable`);
+    }
+
+    try {
+      await model.createSessionWithProgress();
+    } catch (error) {
+      const errorMessage = getWebLLMInitializationErrorMessage(
+        modelName,
+        error
+      );
+      Notification.emit(errorMessage, 'error', { autoClose: 5000 });
+      throw error;
+    }
+  })();
+
+  webLLMModelInitialization.set(modelName, initializationPromise);
+
+  initializationPromise.finally(() => {
+    webLLMModelInitialization.delete(modelName);
+  });
+
+  return initializationPromise;
+}
 
 type TransformersModelSettings = NonNullable<
   Parameters<typeof transformersJS>[1]
@@ -58,7 +175,7 @@ const TRANSFORMERS_MODEL_SETTINGS_BY_ID: Record<
   'onnx-community/Qwen3-0.6B-ONNX': { dtype: 'q4f16' }
 };
 
-function normalizeTransformersModelName(modelName: unknown): string | null {
+function normalizeModelName(modelName: unknown): string | null {
   if (typeof modelName !== 'string') {
     return null;
   }
@@ -71,17 +188,18 @@ function normalizeTransformersModelName(modelName: unknown): string | null {
   return normalizedModelName;
 }
 
-function getConfiguredTransformersModelNames(
-  settingsModel: IAISettingsModelLike
+function getConfiguredProviderModelNames(
+  settingsModel: IAISettingsModelLike,
+  providerId: string
 ): string[] {
   const modelNames = new Set<string>();
 
   for (const provider of settingsModel.providers) {
-    if (provider.provider !== 'transformers-js') {
+    if (provider.provider !== providerId) {
       continue;
     }
 
-    const modelName = normalizeTransformersModelName(provider.model);
+    const modelName = normalizeModelName(provider.model);
     if (modelName) {
       modelNames.add(modelName);
     }
@@ -90,7 +208,19 @@ function getConfiguredTransformersModelNames(
   return [...modelNames];
 }
 
-function getUserConfiguredTransformersModelNames(value: unknown): string[] {
+function getConfiguredTransformersModelNames(
+  settingsModel: IAISettingsModelLike
+): string[] {
+  return getConfiguredProviderModelNames(settingsModel, 'transformers-js');
+}
+
+function getConfiguredWebLLMModelNames(
+  settingsModel: IAISettingsModelLike
+): string[] {
+  return getConfiguredProviderModelNames(settingsModel, 'web-llm');
+}
+
+function getUserConfiguredModelNames(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -98,7 +228,7 @@ function getUserConfiguredTransformersModelNames(value: unknown): string[] {
   const modelNames = new Set<string>();
 
   for (const entry of value) {
-    const modelName = normalizeTransformersModelName(entry);
+    const modelName = normalizeModelName(entry);
     if (modelName) {
       modelNames.add(modelName);
     }
@@ -280,6 +410,18 @@ function preloadConfiguredTransformersModels(
   }
 }
 
+function preloadConfiguredWebLLMModels(
+  settingsModel: IAISettingsModelLike
+): void {
+  const modelNames = getConfiguredWebLLMModelNames(settingsModel);
+
+  for (const modelName of modelNames) {
+    void initializeWebLLMModel(modelName).catch(error => {
+      console.error(`Failed to initialize WebLLM model "${modelName}"`, error);
+    });
+  }
+}
+
 /**
  * Initialization data for the jupyterlab-browser-ai extension.
  */
@@ -295,6 +437,8 @@ export const providerRegistryPlugin: JupyterFrontEndPlugin<void> = {
     settingRegistry: ISettingRegistry | null,
     settingsModel: IAISettingsModelLike | null
   ) => {
+    let configuredWebLLMModels: string[] = [];
+    let refreshWebLLMDefaultModels: (() => void) | null = null;
     let configuredTransformersModels: string[] = [];
     let refreshTransformersDefaultModels: (() => void) | null = null;
 
@@ -316,67 +460,84 @@ export const providerRegistryPlugin: JupyterFrontEndPlugin<void> = {
     }
 
     if (doesBrowserSupportWebLLM()) {
-      const webLLMInfo: IProviderInfo = {
-        id: 'web-llm',
-        name: 'WebLLM',
-        apiKeyRequirement: 'none',
-        defaultModels: [
-          'Llama-3.2-3B-Instruct-q4f16_1-MLC',
-          'Llama-3.2-1B-Instruct-q4f16_1-MLC',
-          'Phi-3.5-mini-instruct-q4f16_1-MLC',
-          'gemma-2-2b-it-q4f16_1-MLC',
-          'Qwen3-0.6B-q4f16_1-MLC'
-        ],
-        supportsBaseURL: false,
-        supportsHeaders: false,
-        supportsToolCalling: true,
-        factory: (options: { model?: string }) => {
-          const modelName = options.model ?? 'Qwen3-0.6B-q4f16_1-MLC';
-
-          let notificationId: string | null = null;
-
-          const model = webLLM(modelName, {
-            worker: new Worker(new URL('./webllm-worker.js', import.meta.url), {
-              type: 'module'
-            }),
-            initProgressCallback: report => {
-              const percentage = Math.round(report.progress * 100);
-
-              if (notificationId === null) {
-                notificationId = Notification.emit(
-                  report.text ?? `Downloading ${modelName}...`,
-                  'in-progress',
-                  {
-                    progress: 0,
-                    autoClose: false
-                  }
-                );
-              } else if (percentage === 100) {
-                if (notificationId) {
-                  Notification.update({
-                    id: notificationId,
-                    message: `${modelName} ready`,
-                    type: 'success',
-                    progress: 1,
-                    autoClose: 3000
-                  });
-                }
-              } else {
-                if (notificationId) {
-                  Notification.update({
-                    id: notificationId,
-                    message: `Downloading ${modelName}... ${percentage}%`,
-                    progress: report.progress
-                  });
-                }
-              }
+      const registerWebLLMProvider = () => {
+        const webLLMInfo: IProviderInfo = {
+          id: 'web-llm',
+          name: 'WebLLM',
+          apiKeyRequirement: 'none',
+          defaultModels: [...configuredWebLLMModels],
+          description: WEBLLM_PROVIDER_DESCRIPTION,
+          supportsBaseURL: false,
+          supportsHeaders: false,
+          supportsToolCalling: true,
+          factory: (options: { model?: string }) => {
+            const modelName = options.model ?? configuredWebLLMModels[0];
+            if (!modelName) {
+              throw new Error(
+                'No WebLLM model configured. Set "webLLMModels" in jupyterlab-browser-ai settings.'
+              );
             }
-          });
 
-          return model;
-        }
+            const model = getOrCreateWebLLMModel(modelName);
+
+            // Pre-initialize when a model instance is created (e.g. restored chats)
+            // so first user message is less likely to block on model load.
+            void initializeWebLLMModel(modelName).catch(error => {
+              console.error(
+                `Failed to initialize WebLLM model "${modelName}"`,
+                error
+              );
+            });
+
+            return model;
+          }
+        };
+        providerRegistry.registerProvider(webLLMInfo);
+
+        refreshWebLLMDefaultModels = () => {
+          const providerInfo = providerRegistry.getProviderInfo('web-llm');
+          if (!providerInfo) {
+            return;
+          }
+
+          providerInfo.defaultModels.splice(
+            0,
+            providerInfo.defaultModels.length,
+            ...configuredWebLLMModels
+          );
+        };
+
+        refreshWebLLMDefaultModels();
       };
-      providerRegistry.registerProvider(webLLMInfo);
+
+      if (settingRegistry) {
+        void settingRegistry
+          .load(PLUGIN_ID)
+          .then(settings => {
+            const updateConfiguredWebLLMModels = () => {
+              const composite = settings.composite as Record<string, unknown>;
+              configuredWebLLMModels = getUserConfiguredModelNames(
+                composite[WEBLLM_CUSTOM_MODELS_SETTING]
+              );
+              refreshWebLLMDefaultModels?.();
+            };
+
+            updateConfiguredWebLLMModels();
+            registerWebLLMProvider();
+            settings.changed.connect(() => {
+              updateConfiguredWebLLMModels();
+            });
+          })
+          .catch(reason => {
+            console.error(
+              'Failed to load WebLLM settings for jupyterlab-browser-ai.',
+              reason
+            );
+            registerWebLLMProvider();
+          });
+      } else {
+        registerWebLLMProvider();
+      }
     }
 
     if (doesBrowserSupportTransformersJS()) {
@@ -439,10 +600,9 @@ export const providerRegistryPlugin: JupyterFrontEndPlugin<void> = {
           .then(settings => {
             const updateConfiguredTransformersModels = () => {
               const composite = settings.composite as Record<string, unknown>;
-              configuredTransformersModels =
-                getUserConfiguredTransformersModelNames(
-                  composite[TRANSFORMERS_CUSTOM_MODELS_SETTING]
-                );
+              configuredTransformersModels = getUserConfiguredModelNames(
+                composite[TRANSFORMERS_CUSTOM_MODELS_SETTING]
+              );
               refreshTransformersDefaultModels?.();
             };
 
@@ -462,23 +622,40 @@ export const providerRegistryPlugin: JupyterFrontEndPlugin<void> = {
       } else {
         registerTransformersProvider();
       }
+    }
 
-      if (settingsModel) {
-        let appLayoutRestored = false;
+    if (settingsModel) {
+      let appLayoutRestored = false;
 
-        void app.restored.then(() => {
-          appLayoutRestored = true;
-        });
+      void app.restored.then(() => {
+        appLayoutRestored = true;
 
-        settingsModel.stateChanged.connect(() => {
-          // Ignore initial settings hydration on startup. Only preload when
-          // users update provider configuration in the UI.
-          if (!appLayoutRestored) {
-            return;
-          }
+        // Preload models already configured in providers on startup so
+        // initialization/download notifications show before first chat message.
+        if (doesBrowserSupportWebLLM()) {
+          preloadConfiguredWebLLMModels(settingsModel);
+        }
+
+        if (doesBrowserSupportTransformersJS()) {
           preloadConfiguredTransformersModels(settingsModel);
-        });
-      }
+        }
+      });
+
+      settingsModel.stateChanged.connect(() => {
+        // Ignore initial settings hydration on startup. Only preload when
+        // users update provider configuration in the UI.
+        if (!appLayoutRestored) {
+          return;
+        }
+
+        if (doesBrowserSupportWebLLM()) {
+          preloadConfiguredWebLLMModels(settingsModel);
+        }
+
+        if (doesBrowserSupportTransformersJS()) {
+          preloadConfiguredTransformersModels(settingsModel);
+        }
+      });
     }
   }
 };
