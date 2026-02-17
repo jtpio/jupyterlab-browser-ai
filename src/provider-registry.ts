@@ -46,7 +46,9 @@ const TRANSFORMERS_CUSTOM_MODELS_SETTING = 'transformersJsModels';
 const WEBLLM_PROVIDER_DESCRIPTION =
   'On-device browser models accelerated with WebGPU. Configure model IDs in the "webLLMModels" setting.';
 const TRANSFORMERS_PROVIDER_DESCRIPTION =
-  'Small on-device models for notebook and code workflows. Configure model IDs in the "transformersJsModels" setting.';
+  'Small on-device models accelerated with WebGPU when available. Configure model IDs in the "transformersJsModels" setting.';
+const TRANSFORMERS_NO_WEBGPU_WARNING_MESSAGE =
+  'WebGPU is not available. Transformers.js will run on CPU and may be slower.';
 const MODEL_PRELOAD_NOTIFICATION_DELAY_MS = 1200;
 const FACTORY_INIT_NOTIFICATION_DELAY_MS = 2000;
 
@@ -175,6 +177,19 @@ const TRANSFORMERS_MODEL_SETTINGS_BY_ID: Record<
   'onnx-community/Qwen3-0.6B-ONNX': { dtype: 'q4f16' }
 };
 
+let hasShownTransformersNoWebGPUWarning = false;
+
+function maybeWarnOnTransformersWithoutWebGPU(): void {
+  if (hasShownTransformersNoWebGPUWarning || doesBrowserSupportWebLLM()) {
+    return;
+  }
+
+  hasShownTransformersNoWebGPUWarning = true;
+  Notification.emit(TRANSFORMERS_NO_WEBGPU_WARNING_MESSAGE, 'warning', {
+    autoClose: 5000
+  });
+}
+
 function normalizeModelName(modelName: unknown): string | null {
   if (typeof modelName !== 'string') {
     return null;
@@ -245,6 +260,8 @@ function getOrCreateTransformersModel(
 ): TransformersJSLanguageModel {
   let model = transformersModels.get(modelName);
   if (!model) {
+    maybeWarnOnTransformersWithoutWebGPU();
+
     const modelSettings = TRANSFORMERS_MODEL_SETTINGS_BY_ID[modelName] ?? {};
     model = transformersJS(modelName, {
       ...modelSettings,
