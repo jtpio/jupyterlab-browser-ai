@@ -54,6 +54,134 @@ const FACTORY_INIT_NOTIFICATION_DELAY_MS = 2000;
 
 const webLLMModels = new Map<string, WebLLMLanguageModel>();
 const webLLMModelInitialization = new Map<string, Promise<void>>();
+const modelExecutionQueue = new WeakMap<object, Promise<void>>();
+
+type SerializableInferenceModel = {
+  doGenerate: (...args: any[]) => Promise<any>;
+  doStream: (...args: any[]) => Promise<{ stream: ReadableStream<any> }>;
+};
+
+async function acquireModelExecutionSlot(model: object): Promise<() => void> {
+  const previous = modelExecutionQueue.get(model) ?? Promise.resolve();
+
+  let releaseCurrentSlot: (() => void) | null = null;
+  const current = new Promise<void>(resolve => {
+    releaseCurrentSlot = resolve;
+  });
+
+  const queueTail = previous.catch(() => undefined).then(() => current);
+  modelExecutionQueue.set(model, queueTail);
+
+  await previous.catch(() => undefined);
+
+  let released = false;
+  return () => {
+    if (released) {
+      return;
+    }
+
+    released = true;
+    releaseCurrentSlot?.();
+
+    if (modelExecutionQueue.get(model) === queueTail) {
+      modelExecutionQueue.delete(model);
+    }
+  };
+}
+
+function wrapSerializedStream<T>(
+  source: ReadableStream<T>,
+  releaseExecutionSlot: () => void
+): ReadableStream<T> {
+  const reader = source.getReader();
+  let released = false;
+
+  const release = () => {
+    if (released) {
+      return;
+    }
+
+    released = true;
+    releaseExecutionSlot();
+  };
+
+  return new ReadableStream<T>({
+    async pull(controller) {
+      try {
+        const { done, value } = await reader.read();
+        if (done) {
+          release();
+          controller.close();
+          return;
+        }
+        controller.enqueue(value);
+      } catch (error) {
+        release();
+        controller.error(error);
+      }
+    },
+    async cancel(reason) {
+      try {
+        await reader.cancel(reason);
+      } finally {
+        release();
+      }
+    }
+  });
+}
+
+function createSerializedInferenceProxy<
+  TModel extends SerializableInferenceModel & object
+>(model: TModel): TModel {
+  const originalDoGenerate = model.doGenerate.bind(model);
+  const originalDoStream = model.doStream.bind(model);
+
+  const serializedDoGenerate = async (
+    ...args: Parameters<TModel['doGenerate']>
+  ) => {
+    const releaseExecutionSlot = await acquireModelExecutionSlot(model);
+    try {
+      return await originalDoGenerate(...args);
+    } finally {
+      releaseExecutionSlot();
+    }
+  };
+
+  const serializedDoStream = async (
+    ...args: Parameters<TModel['doStream']>
+  ) => {
+    const releaseExecutionSlot = await acquireModelExecutionSlot(model);
+
+    try {
+      const streamResult = await originalDoStream(...args);
+      return {
+        ...streamResult,
+        stream: wrapSerializedStream(streamResult.stream, releaseExecutionSlot)
+      } as Awaited<ReturnType<TModel['doStream']>>;
+    } catch (error) {
+      releaseExecutionSlot();
+      throw error;
+    }
+  };
+
+  return new Proxy(model, {
+    get(target, property) {
+      if (property === 'doGenerate') {
+        return serializedDoGenerate;
+      }
+
+      if (property === 'doStream') {
+        return serializedDoStream;
+      }
+
+      const value = Reflect.get(target, property, target);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+    set(target, property, value) {
+      return Reflect.set(target, property, value, target);
+    }
+  });
+}
 
 function getOrCreateWebLLMModel(modelName: string): WebLLMLanguageModel {
   let model = webLLMModels.get(modelName);
@@ -93,6 +221,7 @@ function getOrCreateWebLLMModel(modelName: string): WebLLMLanguageModel {
       }
     });
 
+    model = createSerializedInferenceProxy(model);
     webLLMModels.set(modelName, model);
   }
 
@@ -272,6 +401,7 @@ function getOrCreateTransformersModel(
         }
       )
     });
+    model = createSerializedInferenceProxy(model);
     transformersModels.set(modelName, model);
   }
   return model;
