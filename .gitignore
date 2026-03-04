@@ -122,3 +122,8 @@ dmypy.json
 
 # Temporary files
 tmp/
+
+# Demo
+demo/dist/
+demo/.venv/
+demo/.jupyterlite.doit.db
