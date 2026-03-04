@@ -24,6 +24,24 @@ These features require no API key and run fully on-device. They are
 automatically enabled when the browser supports the corresponding API and
 gracefully disabled otherwise.
 
+### Enabling Chrome AI
+
+See the official [Get started with built-in AI](https://developer.chrome.com/docs/ai/get-started)
+guide for full details. In short:
+
+1. Open `chrome://flags/#optimization-guide-on-device-model` and set it to
+   **Enabled**.
+2. Open `chrome://flags/#prompt-api-for-gemini-nano` and set it to **Enabled**.
+3. Restart Chrome.
+4. Verify by running `await LanguageModel.availability();` in the DevTools
+   console — it should return `"available"`.
+
+**System requirements:**
+
+- Chrome on Windows 10/11, macOS 13+, Linux, or ChromeOS (Chromebook Plus)
+- At least 22 GB of free disk space on the volume containing your Chrome profile
+- GPU with > 4 GB VRAM, or 16 GB RAM with 4+ CPU cores
+
 ### Chat provider
 
 Chrome Built-in AI is registered as a chat provider (provider ID `chrome-ai`).
