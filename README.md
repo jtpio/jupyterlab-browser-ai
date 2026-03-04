@@ -16,6 +16,47 @@ To install the extension, execute:
 pip install jupyterlab_browser_ai
 ```
 
+## Chrome AI
+
+This extension provides several features powered by
+[Chrome's built-in AI APIs](https://developer.chrome.com/docs/ai/built-in-apis).
+These features require no API key and run fully on-device. They are
+automatically enabled when the browser supports the corresponding API and
+gracefully disabled otherwise.
+
+### Chat provider
+
+Chrome Built-in AI is registered as a chat provider (provider ID `chrome-ai`).
+Select it in the JupyterLab AI provider dropdown to chat with the on-device
+model — no API key or model download required.
+
+### Alt text generation
+
+Right-click any image in a notebook markdown cell and select
+**Generate Alt Text with ChromeAI**. The extension sends the image to Chrome's
+Prompt API, generates a concise alt text description, and updates the markdown
+source. The alt text is also copied to the clipboard as a fallback.
+
+### Audio transcription
+
+Right-click an audio file (`.mp3`, `.wav`, `.ogg`, `.m4a`, `.aac`, `.flac`,
+`.opus`) in the file browser and select **Generate Transcript with ChromeAI**.
+The transcript is saved as `<filename>_transcript.txt` in the same directory.
+
+### Notebook proofreader
+
+Open a notebook and run the **Proofread Notebook** command from the command
+palette (or the toolbar button). The extension uses Chrome's Proofreader API to
+check grammar and spelling in all markdown cells and applies corrections
+in-place.
+
+### File summarizer
+
+When Chrome's Summarizer API is available, files in the file browser
+(`.ipynb`, `.md`, `.txt`, `.py`, `.js`, `.ts`) display a sparkle badge. Click
+the badge to generate a TL;DR summary shown in a tooltip. Summaries are cached
+and automatically invalidated when the file is saved.
+
 ## Transformers.js models
 
 Transformers.js model IDs can be discovered on Hugging Face:
