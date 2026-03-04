@@ -16,6 +16,65 @@ To install the extension, execute:
 pip install jupyterlab_browser_ai
 ```
 
+## Chrome AI
+
+This extension provides several features powered by
+[Chrome's built-in AI APIs](https://developer.chrome.com/docs/ai/built-in-apis).
+These features require no API key and run fully on-device. They are
+automatically enabled when the browser supports the corresponding API and
+gracefully disabled otherwise.
+
+### Enabling Chrome AI
+
+See the official [Get started with built-in AI](https://developer.chrome.com/docs/ai/get-started)
+guide for full details. In short:
+
+1. Open `chrome://flags/#optimization-guide-on-device-model` and set it to
+   **Enabled**.
+2. Open `chrome://flags/#prompt-api-for-gemini-nano` and set it to **Enabled**.
+3. Restart Chrome.
+4. Verify by running `await LanguageModel.availability();` in the DevTools
+   console — it should return `"available"`.
+
+**System requirements:**
+
+- Chrome on Windows 10/11, macOS 13+, Linux, or ChromeOS (Chromebook Plus)
+- At least 22 GB of free disk space on the volume containing your Chrome profile
+- GPU with > 4 GB VRAM, or 16 GB RAM with 4+ CPU cores
+
+### Chat provider
+
+Chrome Built-in AI is registered as a chat provider (provider ID `chrome-ai`).
+Select it in the JupyterLab AI provider dropdown to chat with the on-device
+model — no API key or model download required.
+
+### Alt text generation
+
+Right-click any image in a notebook markdown cell and select
+**Generate Alt Text with ChromeAI**. The extension sends the image to Chrome's
+Prompt API, generates a concise alt text description, and updates the markdown
+source. The alt text is also copied to the clipboard as a fallback.
+
+### Audio transcription
+
+Right-click an audio file (`.mp3`, `.wav`, `.ogg`, `.m4a`, `.aac`, `.flac`,
+`.opus`) in the file browser and select **Generate Transcript with ChromeAI**.
+The transcript is saved as `<filename>_transcript.txt` in the same directory.
+
+### Notebook proofreader
+
+Open a notebook and run the **Proofread Notebook** command from the command
+palette (or the toolbar button). The extension uses Chrome's Proofreader API to
+check grammar and spelling in all markdown cells and applies corrections
+in-place.
+
+### File summarizer
+
+When Chrome's Summarizer API is available, files in the file browser
+(`.ipynb`, `.md`, `.txt`, `.py`, `.js`, `.ts`) display a sparkle badge. Click
+the badge to generate a TL;DR summary shown in a tooltip. Summaries are cached
+and automatically invalidated when the file is saved.
+
 ## Transformers.js models
 
 Transformers.js model IDs can be discovered on Hugging Face:
