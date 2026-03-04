@@ -1,6 +1,7 @@
 # jupyterlab_browser_ai
 
 [![Github Actions Status](https://github.com/jtpio/jupyterlab-browser-ai/workflows/Build/badge.svg)](https://github.com/jtpio/jupyterlab-browser-ai/actions/workflows/build.yml)
+[![lite-badge](https://jupyterlite.rtfd.io/en/latest/_static/badge.svg)](https://jtpio.github.io/jupyterlab-browser-ai/lab/index.html)
 
 In-browser AI in JupyterLab and Jupyter Notebook
 
