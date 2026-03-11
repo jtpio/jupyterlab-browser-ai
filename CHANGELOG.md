@@ -2,6 +2,42 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.6.0
+
+([Full Changelog](https://github.com/jtpio/jupyterlab-browser-ai/compare/v0.5.2...a4e2eee1b612333140c6c2e746eae11a889b2981))
+
+### Enhancements made
+
+- Warn when WebGPU is not available [#18](https://github.com/jtpio/jupyterlab-browser-ai/pull/18) ([@jtpio](https://github.com/jtpio))
+- Add support for Transformers.js models [#15](https://github.com/jtpio/jupyterlab-browser-ai/pull/15) ([@jtpio](https://github.com/jtpio))
+- feat: update @built-in-ai packages to support tool calling [#12](https://github.com/jtpio/jupyterlab-browser-ai/pull/12) ([@jakobhoeg](https://github.com/jakobhoeg), [@jtpio](https://github.com/jtpio))
+
+### Bugs fixed
+
+- Fix WebLLM [#16](https://github.com/jtpio/jupyterlab-browser-ai/pull/16) ([@jtpio](https://github.com/jtpio))
+
+### Maintenance and upkeep improvements
+
+- Bump deps [#21](https://github.com/jtpio/jupyterlab-browser-ai/pull/21) ([@jtpio](https://github.com/jtpio))
+- Update dependencies [#14](https://github.com/jtpio/jupyterlab-browser-ai/pull/14) ([@jtpio](https://github.com/jtpio))
+- Update deps [#13](https://github.com/jtpio/jupyterlab-browser-ai/pull/13) ([@jtpio](https://github.com/jtpio))
+
+### Documentation improvements
+
+- Add JupyterLite demo [#20](https://github.com/jtpio/jupyterlab-browser-ai/pull/20) ([@jtpio](https://github.com/jtpio))
+- Document chromeai [#19](https://github.com/jtpio/jupyterlab-browser-ai/pull/19) ([@jtpio](https://github.com/jtpio))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jtpio/jupyterlab-browser-ai/graphs/contributors?from=2025-10-29&to=2026-03-11&type=c))
+
+@jakobhoeg ([activity](https://github.com/search?q=repo%3Ajtpio%2Fjupyterlab-browser-ai+involves%3Ajakobhoeg+updated%3A2025-10-29..2026-03-11&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajtpio%2Fjupyterlab-browser-ai+involves%3Ajtpio+updated%3A2025-10-29..2026-03-11&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.5.2
 
 ([Full Changelog](https://github.com/jtpio/jupyterlab-browser-ai/compare/v0.5.1...5e39c2ffb67c3f5ac8f2c262a33c29f82da681f8))
@@ -15,8 +51,6 @@
 ([GitHub contributors page for this release](https://github.com/jtpio/jupyterlab-browser-ai/graphs/contributors?from=2025-10-29&to=2025-10-29&type=c))
 
 [@jtpio](https://github.com/search?q=repo%3Ajtpio%2Fjupyterlab-browser-ai+involves%3Ajtpio+updated%3A2025-10-29..2025-10-29&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.5.1
 
