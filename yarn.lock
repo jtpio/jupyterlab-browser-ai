@@ -30,6 +30,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ai-sdk/gateway@npm:3.0.72":
+  version: 3.0.72
+  resolution: "@ai-sdk/gateway@npm:3.0.72"
+  dependencies:
+    "@ai-sdk/provider": 3.0.8
+    "@ai-sdk/provider-utils": 4.0.20
+    "@vercel/oidc": 3.1.0
+  peerDependencies:
+    zod: ^3.25.76 || ^4.1.8
+  checksum: 97db1c78810853d8dfc8e449076235388527c1b2a9fcbad564f16504f20dc292ae4281bc13be3b160ab49e0f06d26a82d410b178f8274d0ab36e63eeedf82c6e
+  languageName: node
+  linkType: hard
+
 "@ai-sdk/google@npm:^3.0.23":
   version: 3.0.26
   resolution: "@ai-sdk/google@npm:3.0.26"
@@ -101,6 +114,19 @@ __metadata:
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
   checksum: 5dd11cc9eb38b99d202f7cdbfd7414850b63a07fd7cf68c46358702356d959715f200ecb17206c3403fc4461011911c39f21f384d212957feea62349effb71a3
+  languageName: node
+  linkType: hard
+
+"@ai-sdk/provider-utils@npm:4.0.20":
+  version: 4.0.20
+  resolution: "@ai-sdk/provider-utils@npm:4.0.20"
+  dependencies:
+    "@ai-sdk/provider": 3.0.8
+    "@standard-schema/spec": ^1.1.0
+    eventsource-parser: ^3.0.6
+  peerDependencies:
+    zod: ^3.25.76 || ^4.1.8
+  checksum: ffc0918828602a196ad2402964069e8e6ab85615d4c45cc8c35bcdb6f24eff9f0244fa2fb0e15931cb65c603ba079424834f067044e8d34b53929975663040a8
   languageName: node
   linkType: hard
 
@@ -239,34 +265,34 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@browser-ai/core@npm:^2.1.1":
-  version: 2.1.1
-  resolution: "@browser-ai/core@npm:2.1.1"
+"@browser-ai/core@npm:^2.1.6":
+  version: 2.1.6
+  resolution: "@browser-ai/core@npm:2.1.6"
   dependencies:
     "@mediapipe/tasks-text": ^0.10.22-rc.20250304
   peerDependencies:
     ai: ^6.0.0
-  checksum: c7582ae7af4d4f0b3503e300550857cc20e9d56aef09999b065f1412321ce082fd21218cbaffc77c6dc6da80461020e2a0df5a315efee3ce1dd9a09d1c334deb
+  checksum: 42ae356aac7d148a8fa3a2c6b67d6fb328aedba4069576e18445fbb1b656fc0ec588fdd5f539b1b48ebe1ed4a1499cbae8e42ce6eaadc21801b788964e8e8bbf
   languageName: node
   linkType: hard
 
-"@browser-ai/transformers-js@npm:^2.1.3":
-  version: 2.1.3
-  resolution: "@browser-ai/transformers-js@npm:2.1.3"
+"@browser-ai/transformers-js@npm:^2.1.7":
+  version: 2.1.7
+  resolution: "@browser-ai/transformers-js@npm:2.1.7"
   peerDependencies:
-    "@huggingface/transformers": ^3.7.0
+    "@huggingface/transformers": ^3.7.0 || ^4.0.0-next
     ai: ^6.0.0
-  checksum: 1897c905f15924708ff6e911b070dd6b71b0cc9bb20cd537390a2881024f5f17538f36dbb8b388c1537277dfcefc48daf7789b32e6e9de980e420e54f5c6235a
+  checksum: b7438c31232614bad9110fed28eda477f2bb16b7022e2d1de96df5051d294d066f63544fc7a9a02202afc6a17c5ec89c9b3fcf52d0aafed39be8c4d537b543fc
   languageName: node
   linkType: hard
 
-"@browser-ai/web-llm@npm:^2.1.3":
-  version: 2.1.3
-  resolution: "@browser-ai/web-llm@npm:2.1.3"
+"@browser-ai/web-llm@npm:^2.1.6":
+  version: 2.1.6
+  resolution: "@browser-ai/web-llm@npm:2.1.6"
   peerDependencies:
     "@mlc-ai/web-llm": ^0.2.79
     ai: ^6.0.0
-  checksum: 50672f08bad7e6ea6902dd9e5ec5eb87c333b50ca6c7a4af683a8a90597ec3b9054da378869c0a502478ab5398af8708bf84e2648c3b58b5bf26f5ff6ca6771a
+  checksum: 46b099d19ee169db376f24be2b43311ce7b40dd4563557401e53f95ce868272484f855a7b75051169db4c559663af615af62f296d87ba6b08a0f50507162a6e7
   languageName: node
   linkType: hard
 
@@ -1228,9 +1254,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyter/chat@npm:^0.19.0":
-  version: 0.19.0
-  resolution: "@jupyter/chat@npm:0.19.0"
+"@jupyter/chat@npm:^0.20.0":
+  version: 0.20.0
+  resolution: "@jupyter/chat@npm:0.20.0"
   dependencies:
     "@emotion/react": ^11.10.5
     "@emotion/styled": ^11.10.5
@@ -1258,7 +1284,7 @@ __metadata:
     clsx: ^2.1.0
     react: ^18.2.0
     react-dom: ^18.2.0
-  checksum: a0d97a966df31499d3ff3f17935a0e1fe10a4bb59510f5771ca7d9764f1bcb3c177e8e4237337082baa1c5f00a4ae3cc685a6fd04b22b3a58123e3ddd661aaa6
+  checksum: 27ec154d9117a04a16f5d8a272fca995b0802059ef467259400382584e25dc4b1c0531865e8c42374d473e5f79050d96bd6840c65cda3d18893f34c886ddbdcd
   languageName: node
   linkType: hard
 
@@ -2290,9 +2316,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlite/ai@npm:^0.12.0":
-  version: 0.12.0
-  resolution: "@jupyterlite/ai@npm:0.12.0"
+"@jupyterlite/ai@npm:^0.13.0":
+  version: 0.13.0
+  resolution: "@jupyterlite/ai@npm:0.13.0"
   dependencies:
     "@ai-sdk/anthropic": ^3.0.40
     "@ai-sdk/google": ^3.0.23
@@ -2300,7 +2326,7 @@ __metadata:
     "@ai-sdk/mistral": ^3.0.19
     "@ai-sdk/openai": ^3.0.26
     "@ai-sdk/openai-compatible": ^2.0.28
-    "@jupyter/chat": ^0.19.0
+    "@jupyter/chat": ^0.20.0
     "@jupyterlab/application": ^4.0.0
     "@jupyterlab/apputils": ^4.5.6
     "@jupyterlab/cells": ^4.4.6
@@ -2325,10 +2351,10 @@ __metadata:
     "@mui/icons-material": ^7
     "@mui/material": ^7
     ai: ^6.0.78
-    jupyter-secrets-manager: ^0.4.0
+    jupyter-secrets-manager: ^0.5.0
     yaml: ^2.8.1
     zod: ^4.3.6
-  checksum: df8435ad791af0122b73e4927f2cc9271351cdeacb894f07b12c2ae3dee29171d33b3afcf11bb7a25cfa9da52187f57d9d9536c74475f7de50cec31bb3531667
+  checksum: ad5207151cb3fd97837d7537248cd16ac9fd279ebd175a179cad149e19a4a153a5f9dd265f8c492b433342c49475fad3ad225a1de6ff5cfc6c92ba75041b9565
   languageName: node
   linkType: hard
 
@@ -2761,12 +2787,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mlc-ai/web-llm@npm:^0.2.80":
-  version: 0.2.80
-  resolution: "@mlc-ai/web-llm@npm:0.2.80"
+"@mlc-ai/web-llm@npm:^0.2.81":
+  version: 0.2.81
+  resolution: "@mlc-ai/web-llm@npm:0.2.81"
   dependencies:
     loglevel: ^1.9.1
-  checksum: b411a1c50be3acd6fa97f4d741680ca01e46d50d222e2c653b18e48fa29e3573ae60028f0c744ef260d63210e1e8da55ecbc023f16e212b4be4bb355ff141063
+  checksum: 41972673e3fc1c251aa55e6f03e54a34d44f52406fa6d01b78013a418391fa4d0e2bf532778bb1a49b07a6fb6b6b3c58f03dfcad78b15f67ca86a8adc0d3094b
   languageName: node
   linkType: hard
 
@@ -3409,10 +3435,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/dom-chromium-ai@npm:^0.0.10":
-  version: 0.0.10
-  resolution: "@types/dom-chromium-ai@npm:0.0.10"
-  checksum: 7cb4a196c0af2e7a64fdd93f380fe26c6cd6b679456714c6058bcff6b0c72ff335de91b5bbfcba76603bd738a8e99d1d4cf7c05d32110b569177a9172384e63f
+"@types/dom-chromium-ai@npm:^0.0.14":
+  version: 0.0.14
+  resolution: "@types/dom-chromium-ai@npm:0.0.14"
+  checksum: b997ee5b5c97da045d1b7928ac40722679388d9448263ed728c2f56f53823d692a92cd789b846ff18f56728834c3fbf81a0fc833d157cd84dd3d4c76046b11d6
   languageName: node
   linkType: hard
 
@@ -4036,7 +4062,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ai@npm:^6.0.78, ai@npm:^6.0.82":
+"ai@npm:^6.0.116":
+  version: 6.0.125
+  resolution: "ai@npm:6.0.125"
+  dependencies:
+    "@ai-sdk/gateway": 3.0.72
+    "@ai-sdk/provider": 3.0.8
+    "@ai-sdk/provider-utils": 4.0.20
+    "@opentelemetry/api": 1.9.0
+  peerDependencies:
+    zod: ^3.25.76 || ^4.1.8
+  checksum: 7db88ca599774d633b872c993265170e7e297f0a1632d44e509dbc0df8f7ccb4c0fa21499edc27e49b0b8512bd42e3482a4278ad563a27acc02cc733fa0d0b1d
+  languageName: node
+  linkType: hard
+
+"ai@npm:^6.0.78":
   version: 6.0.82
   resolution: "ai@npm:6.0.82"
   dependencies:
@@ -6756,9 +6796,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jupyter-secrets-manager@npm:^0.4.0":
-  version: 0.4.1
-  resolution: "jupyter-secrets-manager@npm:0.4.1"
+"jupyter-secrets-manager@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "jupyter-secrets-manager@npm:0.5.0"
   dependencies:
     "@jupyterlab/application": ^4.0.0
     "@jupyterlab/coreutils": ^6.0.0
@@ -6767,7 +6807,7 @@ __metadata:
     "@lumino/algorithm": ^2.0.0
     "@lumino/coreutils": ^2.1.2
     "@lumino/signaling": ^2.1.2
-  checksum: 00062a86f6d5a0c98d9e2d0cda68888af0734bf9957a6f30c7f913a67f0bf5f72598c96071f318520805a936d5b99487dd67c920c5ec1decd2be142ab7fcfaf7
+  checksum: d2e703acb6ef515b79a8de53e89607ffff493a684c94f381333feea20be3b9cfebcc0ad69806e2eb7f07cf5620974221f4e0812db899dc29444fa3d66ff9373d
   languageName: node
   linkType: hard
 
@@ -6775,23 +6815,23 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "jupyterlab-browser-ai@workspace:."
   dependencies:
-    "@browser-ai/core": ^2.1.1
-    "@browser-ai/transformers-js": ^2.1.3
-    "@browser-ai/web-llm": ^2.1.3
+    "@browser-ai/core": ^2.1.6
+    "@browser-ai/transformers-js": ^2.1.7
+    "@browser-ai/web-llm": ^2.1.6
     "@huggingface/transformers": ^3.8.1
     "@jupyterlab/application": ^4.5.4
     "@jupyterlab/builder": ^4.5.4
     "@jupyterlab/settingregistry": ^4.5.4
     "@jupyterlab/ui-components": ^4.5.4
-    "@jupyterlite/ai": ^0.12.0
-    "@mlc-ai/web-llm": ^0.2.80
-    "@types/dom-chromium-ai": ^0.0.10
+    "@jupyterlite/ai": ^0.13.0
+    "@mlc-ai/web-llm": ^0.2.81
+    "@types/dom-chromium-ai": ^0.0.14
     "@types/json-schema": ^7.0.11
     "@types/react": ^18.0.26
     "@types/react-addons-linked-state-mixin": ^0.14.22
     "@typescript-eslint/eslint-plugin": ^6.1.0
     "@typescript-eslint/parser": ^6.1.0
-    ai: ^6.0.82
+    ai: ^6.0.116
     css-loader: ^6.7.1
     eslint: ^8.36.0
     eslint-config-prettier: ^8.8.0
