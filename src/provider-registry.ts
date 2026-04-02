@@ -170,11 +170,16 @@ const TRANSFORMERS_MODEL_SETTINGS_BY_ID: Record<
   string,
   Partial<Pick<TransformersModelSettings, 'dtype' | 'device'>>
 > = {
+  // Upstream browser-ai examples use q4 for SmolLM2 in the browser.
+  'HuggingFaceTB/SmolLM2-360M-Instruct': { dtype: 'q4' },
   // ONNX community model cards recommend q4 for Qwen2.5 coder/instruct.
   'onnx-community/Qwen2.5-Coder-0.5B-Instruct': { dtype: 'q4' },
   'onnx-community/Qwen2.5-0.5B-Instruct': { dtype: 'q4' },
   // Qwen3 ONNX cards recommend q4f16 for browser usage.
-  'onnx-community/Qwen3-0.6B-ONNX': { dtype: 'q4f16' }
+  'onnx-community/Qwen3-0.6B-ONNX': { dtype: 'q4f16' },
+  // Upstream browser-ai examples use fp16 for tool-calling-focused models.
+  'onnx-community/granite-4.0-350m-ONNX-web': { dtype: 'fp16' },
+  'onnx-community/LFM2-1.2B-Tool-ONNX': { dtype: 'fp16' }
 };
 
 let hasShownTransformersNoWebGPUWarning = false;
