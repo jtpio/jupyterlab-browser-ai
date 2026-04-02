@@ -27,8 +27,9 @@
         "type": "string"
       },
       "default": [
+        "onnx-community/Qwen3-0.6B-ONNX",
+        "onnx-community/granite-4.0-350m-ONNX-web",
         "onnx-community/Qwen2.5-Coder-0.5B-Instruct",
-        "onnx-community/Qwen2.5-0.5B-Instruct",
         "HuggingFaceTB/SmolLM2-360M-Instruct"
       ]
     }

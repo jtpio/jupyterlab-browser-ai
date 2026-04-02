@@ -84,9 +84,22 @@ Transformers.js model IDs can be discovered on Hugging Face:
 
 By default, this extension uses:
 
+- `onnx-community/Qwen3-0.6B-ONNX`
+- `onnx-community/granite-4.0-350m-ONNX-web`
 - `onnx-community/Qwen2.5-Coder-0.5B-Instruct`
-- `onnx-community/Qwen2.5-0.5B-Instruct`
 - `HuggingFaceTB/SmolLM2-360M-Instruct`
+
+With `@huggingface/transformers@4` and the latest
+`@browser-ai/transformers-js`, good additional candidates are:
+
+- `onnx-community/LFM2-1.2B-Tool-ONNX`
+- `onnx-community/Qwen2.5-0.5B-Instruct`
+
+Upstream `browser-ai` now also supports vision-capable Transformers.js models
+such as `HuggingFaceTB/SmolVLM-256M-Instruct`, but this extension's current
+chat integration only sends text/tool-calling messages, not multimodal image
+parts, so image chat would need follow-up UI work before that model is useful
+here.
 
 The `transformersJsModels` setting for `jupyterlab-browser-ai` controls the
 full dropdown list. If you set it, your list replaces the defaults.
@@ -97,7 +110,8 @@ For example:
 {
   "transformersJsModels": [
     "onnx-community/Qwen3-0.6B-ONNX",
-    "your-org/your-custom-model",
+    "onnx-community/granite-4.0-350m-ONNX-web",
+    "onnx-community/LFM2-1.2B-Tool-ONNX",
     "HuggingFaceTB/SmolLM2-360M-Instruct"
   ]
 }

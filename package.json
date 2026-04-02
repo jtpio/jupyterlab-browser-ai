@@ -53,20 +53,20 @@
         "watch:labextension": "jupyter labextension watch ."
     },
     "dependencies": {
-        "@browser-ai/core": "^2.1.6",
-        "@browser-ai/transformers-js": "^2.1.7",
-        "@browser-ai/web-llm": "^2.1.6",
-        "@huggingface/transformers": "^3.8.1",
-        "@jupyterlab/application": "^4.5.4",
-        "@jupyterlab/settingregistry": "^4.5.4",
-        "@jupyterlab/ui-components": "^4.5.4",
-        "@jupyterlite/ai": "^0.13.0",
-        "@mlc-ai/web-llm": "^0.2.81",
-        "ai": "^6.0.116"
+        "@browser-ai/core": "^2.1.11",
+        "@browser-ai/transformers-js": "^2.2.1",
+        "@browser-ai/web-llm": "^2.1.7",
+        "@huggingface/transformers": "^4.0.0",
+        "@jupyterlab/application": "^4.5.6",
+        "@jupyterlab/settingregistry": "^4.5.6",
+        "@jupyterlab/ui-components": "^4.5.6",
+        "@jupyterlite/ai": "^0.14.0",
+        "@mlc-ai/web-llm": "^0.2.82",
+        "ai": "^6.0.143"
     },
     "devDependencies": {
-        "@jupyterlab/builder": "^4.5.4",
-        "@types/dom-chromium-ai": "^0.0.14",
+        "@jupyterlab/builder": "^4.5.6",
+        "@types/dom-chromium-ai": "^0.0.16",
         "@types/json-schema": "^7.0.11",
         "@types/react": "^18.0.26",
         "@types/react-addons-linked-state-mixin": "^0.14.22",
@@ -86,7 +86,7 @@
         "stylelint-config-standard": "^34.0.0",
         "stylelint-csstree-validator": "^3.0.0",
         "stylelint-prettier": "^4.0.0",
-        "typescript": "~5.8.0",
+        "typescript": "~5.8.3",
         "yjs": "^13.5.0"
     },
     "sideEffects": [
