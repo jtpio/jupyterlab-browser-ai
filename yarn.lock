@@ -250,13 +250,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@browser-ai/transformers-js@npm:^2.2.1":
-  version: 2.2.1
-  resolution: "@browser-ai/transformers-js@npm:2.2.1"
+"@browser-ai/transformers-js@npm:^2.2.2":
+  version: 2.2.2
+  resolution: "@browser-ai/transformers-js@npm:2.2.2"
   peerDependencies:
     "@huggingface/transformers": ^3.7.0 || ^4.0.0-next || ^4.0.0
     ai: ^6.0.0
-  checksum: c72d7f8b5aa339c39ffdfc512754644a62fe011b4314b3552c092aab40c2211f561d3bd0f3806d80725c288cf8c81a753657a44668b2fadc52016397888c8783
+  checksum: ba81e85fed582b02c7313b30fedf74c2e853c48d134fd8d86769578b3718907579cd5683f2c496047bb4a850f60c589dd0c5ff77851a3ac374221553d0fe60f2
   languageName: node
   linkType: hard
 
@@ -828,16 +828,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@huggingface/transformers@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "@huggingface/transformers@npm:4.0.0"
+"@huggingface/transformers@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "@huggingface/transformers@npm:4.0.1"
   dependencies:
     "@huggingface/jinja": ^0.5.6
     "@huggingface/tokenizers": ^0.1.3
     onnxruntime-node: 1.24.3
     onnxruntime-web: 1.25.0-dev.20260327-722743c0e2
     sharp: ^0.34.5
-  checksum: acdfbed9f2afffdef62f8b541cf90af5903b05e3fb71d447c332a7a18a95f22c431df8eff11bb91836e1d596183ae8cbf736dc779702e9be2e3958ff846baf95
+  checksum: 61c4b46e8aae317d64f7cd9faee4bd43af2bc9b7b450d03b70c3fb47592c975b5ce428f51d567fb930a2f87996886e41af3822894be38e46949347ce9e193d76
   languageName: node
   linkType: hard
 
@@ -6403,9 +6403,9 @@ __metadata:
   resolution: "jupyterlab-browser-ai@workspace:."
   dependencies:
     "@browser-ai/core": ^2.1.11
-    "@browser-ai/transformers-js": ^2.2.1
+    "@browser-ai/transformers-js": ^2.2.2
     "@browser-ai/web-llm": ^2.1.7
-    "@huggingface/transformers": ^4.0.0
+    "@huggingface/transformers": ^4.0.1
     "@jupyterlab/application": ^4.5.6
     "@jupyterlab/builder": ^4.5.6
     "@jupyterlab/settingregistry": ^4.5.6
