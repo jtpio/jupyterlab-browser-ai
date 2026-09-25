@@ -10,7 +10,7 @@ import {
   IProviderRegistry,
   IProviderInfo,
   IAISettingsModel
-} from '@jupyterlite/ai';
+} from '@jupyternaut/agent';
 
 import { browserAI, doesBrowserSupportBrowserAI } from '@browser-ai/core';
 
@@ -25,20 +25,6 @@ import {
   doesBrowserSupportTransformersJS,
   type TransformersJSLanguageModel
 } from '@browser-ai/transformers-js';
-
-interface IAISettingsModelLike {
-  providers: Array<{
-    id: string;
-    provider: string;
-    model: string;
-  }>;
-  stateChanged: {
-    connect: (
-      slot: (sender: unknown, args: void) => void,
-      thisArg?: unknown
-    ) => void;
-  };
-}
 
 const PLUGIN_ID = 'jupyterlab-browser-ai:plugin';
 const WEBLLM_CUSTOM_MODELS_SETTING = 'webLLMModels';
@@ -209,7 +195,7 @@ function normalizeModelName(modelName: unknown): string | null {
 }
 
 function getConfiguredProviderModelNames(
-  settingsModel: IAISettingsModelLike,
+  settingsModel: IAISettingsModel,
   providerId: string
 ): string[] {
   const modelNames = new Set<string>();
@@ -229,13 +215,13 @@ function getConfiguredProviderModelNames(
 }
 
 function getConfiguredTransformersModelNames(
-  settingsModel: IAISettingsModelLike
+  settingsModel: IAISettingsModel
 ): string[] {
   return getConfiguredProviderModelNames(settingsModel, 'transformers-js');
 }
 
 function getConfiguredWebLLMModelNames(
-  settingsModel: IAISettingsModelLike
+  settingsModel: IAISettingsModel
 ): string[] {
   return getConfiguredProviderModelNames(settingsModel, 'web-llm');
 }
@@ -418,7 +404,7 @@ async function initializeTransformersModel(
 }
 
 function preloadConfiguredTransformersModels(
-  settingsModel: IAISettingsModelLike
+  settingsModel: IAISettingsModel
 ): void {
   const modelNames = getConfiguredTransformersModelNames(settingsModel);
 
@@ -432,9 +418,7 @@ function preloadConfiguredTransformersModels(
   }
 }
 
-function preloadConfiguredWebLLMModels(
-  settingsModel: IAISettingsModelLike
-): void {
+function preloadConfiguredWebLLMModels(settingsModel: IAISettingsModel): void {
   const modelNames = getConfiguredWebLLMModelNames(settingsModel);
 
   for (const modelName of modelNames) {
@@ -457,7 +441,7 @@ export const providerRegistryPlugin: JupyterFrontEndPlugin<void> = {
     app: JupyterFrontEnd,
     providerRegistry: IProviderRegistry,
     settingRegistry: ISettingRegistry | null,
-    settingsModel: IAISettingsModelLike | null
+    settingsModel: IAISettingsModel | null
   ) => {
     let configuredWebLLMModels: string[] = [];
     let refreshWebLLMDefaultModels: (() => void) | null = null;
