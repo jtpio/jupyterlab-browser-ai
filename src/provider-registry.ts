@@ -10,7 +10,7 @@ import {
   IProviderRegistry,
   IProviderInfo,
   IAISettingsModel
-} from '@jupyterlite/ai';
+} from '@jupyter-ai/jupyternaut-lite';
 
 import { browserAI, doesBrowserSupportBrowserAI } from '@browser-ai/core';
 

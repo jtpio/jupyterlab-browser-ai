@@ -7,7 +7,7 @@ In-browser AI in JupyterLab and Jupyter Notebook
 
 ## Requirements
 
-- JupyterLab >= 4.0.0
+- JupyterLab >= 4.5.0
 
 ## Install
 
