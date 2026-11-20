@@ -17,19 +17,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ai-sdk/gateway@npm:4.0.139":
-  version: 4.0.139
-  resolution: "@ai-sdk/gateway@npm:4.0.139"
-  dependencies:
-    "@ai-sdk/provider": 4.0.37
-    "@ai-sdk/provider-utils": 5.0.76
-    "@vercel/oidc": 3.2.0
-  peerDependencies:
-    zod: ^3.25.76 || ^4.1.8
-  checksum: 1eb369cbe648dc057ad8f1816c2103af22f078dbdbf20a765aba781a00710ab6f10862cf5a0bea41d0ee1fed9ae1307ad51bd2fd745453ed865dac34cffaf8fd
-  languageName: node
-  linkType: hard
-
 "@ai-sdk/gateway@npm:4.0.150":
   version: 4.0.150
   resolution: "@ai-sdk/gateway@npm:4.0.150"
@@ -3678,20 +3665,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ai@npm:^7.0.106":
-  version: 7.0.166
-  resolution: "ai@npm:7.0.166"
-  dependencies:
-    "@ai-sdk/gateway": 4.0.139
-    "@ai-sdk/provider": 4.0.37
-    "@ai-sdk/provider-utils": 5.0.76
-  peerDependencies:
-    zod: ^3.25.76 || ^4.1.8
-  checksum: 8a90156be912680499a7ad8cd87ada58a74e3950fef76daa0d6f221da698d5c1fa12eca3cd9f05074e903a318a3f2272181b72f67542a2745d63bfcccf5425d8
-  languageName: node
-  linkType: hard
-
-"ai@npm:^7.0.177":
+"ai@npm:^7.0.106, ai@npm:^7.0.177":
   version: 7.0.177
   resolution: "ai@npm:7.0.177"
   dependencies:
@@ -7252,14 +7226,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"source-map-js@npm:^1.0.1, source-map-js@npm:^1.2.2":
-  version: 1.2.2
-  resolution: "source-map-js@npm:1.2.2"
-  checksum: d4f3adc1921e145fe84574b5852d7f5bf11e93d6c008a250ffe66a3e698331f066008cc3ba63e720dde07fe74871f1610d2e74532d33b27126e82e57c00df3bf
-  languageName: node
-  linkType: hard
-
-"source-map-js@npm:^1.2.1":
+"source-map-js@npm:^1.0.1, source-map-js@npm:^1.2.1, source-map-js@npm:^1.2.2":
   version: 1.2.4
   resolution: "source-map-js@npm:1.2.4"
   checksum: 7ad68b0f3b0167d4bc3e8507b5140a1d8de032a5ac42169e0007628a4e67d6d2e97d1f171274481475bb6331500ec31f0a43e25fd178f9d4251e2c0fbbeb2856
