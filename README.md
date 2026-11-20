@@ -153,6 +153,21 @@ For example:
 }
 ```
 
+### Tool calling and context window
+
+The WebLLM prebuilt models use a context window of 4096 tokens. The default
+Jupyternaut system prompt and the tool definitions nearly fill this window, so
+a chat that calls tools usually fails after the first tool result.
+
+Set `webLLMContextWindowSize` to give the models a larger window. A larger
+window uses more GPU memory. Reload the page to apply a change.
+
+```json
+{
+  "webLLMContextWindowSize": 8192
+}
+```
+
 ## Uninstall
 
 To remove the extension, execute:

@@ -20,6 +20,8 @@ import {
   type WebLLMLanguageModel
 } from '@browser-ai/web-llm';
 
+import { prebuiltAppConfig, type AppConfig } from '@mlc-ai/web-llm';
+
 import {
   transformersJS,
   doesBrowserSupportTransformersJS,
@@ -42,6 +44,7 @@ interface IAISettingsModelLike {
 
 const PLUGIN_ID = 'jupyterlab-browser-ai:plugin';
 const WEBLLM_CUSTOM_MODELS_SETTING = 'webLLMModels';
+const WEBLLM_CONTEXT_WINDOW_SIZE_SETTING = 'webLLMContextWindowSize';
 const TRANSFORMERS_CUSTOM_MODELS_SETTING = 'transformersJsModels';
 const WEBLLM_PROVIDER_DESCRIPTION =
   'On-device browser models accelerated with WebGPU. Configure model IDs in the "webLLMModels" setting.';
@@ -55,15 +58,44 @@ const FACTORY_INIT_NOTIFICATION_DELAY_MS = 2000;
 const webLLMModels = new Map<string, WebLLMLanguageModel>();
 const webLLMModelInitialization = new Map<string, Promise<void>>();
 
+let webLLMContextWindowSize = 0;
+
+/**
+ * Get the WebLLM app config with the configured context window size.
+ * The prebuilt models use 4096 tokens, which is too small for tool calling.
+ */
+function getWebLLMAppConfig(modelName: string): AppConfig | undefined {
+  if (webLLMContextWindowSize <= 0) {
+    return undefined;
+  }
+
+  return {
+    ...prebuiltAppConfig,
+    model_list: prebuiltAppConfig.model_list.map(record =>
+      record.model_id === modelName
+        ? {
+            ...record,
+            overrides: {
+              ...record.overrides,
+              context_window_size: webLLMContextWindowSize
+            }
+          }
+        : record
+    )
+  };
+}
+
 function getOrCreateWebLLMModel(modelName: string): WebLLMLanguageModel {
   let model = webLLMModels.get(modelName);
   if (!model) {
     let notificationId: string | null = null;
+    const appConfig = getWebLLMAppConfig(modelName);
 
     model = webLLM(modelName, {
       worker: new Worker(new URL('./webllm-worker.js', import.meta.url), {
         type: 'module'
       }),
+      ...(appConfig && { engineConfig: { appConfig } }),
       initProgressCallback: report => {
         const clampedProgress = Math.max(0, Math.min(1, report.progress));
         const percentage = Math.round(clampedProgress * 100);
@@ -238,6 +270,12 @@ function getConfiguredWebLLMModelNames(
   settingsModel: IAISettingsModelLike
 ): string[] {
   return getConfiguredProviderModelNames(settingsModel, 'web-llm');
+}
+
+function getUserConfiguredContextWindowSize(value: unknown): number {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0
+    ? value
+    : 0;
 }
 
 function getUserConfiguredModelNames(value: unknown): string[] {
@@ -461,6 +499,7 @@ export const providerRegistryPlugin: JupyterFrontEndPlugin<void> = {
   ) => {
     let configuredWebLLMModels: string[] = [];
     let refreshWebLLMDefaultModels: (() => void) | null = null;
+    let webLLMSettingsLoaded: Promise<void> = Promise.resolve();
     let configuredTransformersModels: string[] = [];
     let refreshTransformersDefaultModels: (() => void) | null = null;
 
@@ -533,13 +572,16 @@ export const providerRegistryPlugin: JupyterFrontEndPlugin<void> = {
       };
 
       if (settingRegistry) {
-        void settingRegistry
+        webLLMSettingsLoaded = settingRegistry
           .load(PLUGIN_ID)
           .then(settings => {
             const updateConfiguredWebLLMModels = () => {
               const composite = settings.composite as Record<string, unknown>;
               configuredWebLLMModels = getUserConfiguredModelNames(
                 composite[WEBLLM_CUSTOM_MODELS_SETTING]
+              );
+              webLLMContextWindowSize = getUserConfiguredContextWindowSize(
+                composite[WEBLLM_CONTEXT_WINDOW_SIZE_SETTING]
               );
               refreshWebLLMDefaultModels?.();
             };
@@ -655,7 +697,9 @@ export const providerRegistryPlugin: JupyterFrontEndPlugin<void> = {
         // Preload models already configured in providers on startup so
         // initialization/download notifications show before first chat message.
         if (doesBrowserSupportWebLLM()) {
-          preloadConfiguredWebLLMModels(settingsModel);
+          void webLLMSettingsLoaded.then(() =>
+            preloadConfiguredWebLLMModels(settingsModel)
+          );
         }
 
         if (doesBrowserSupportTransformersJS()) {
@@ -671,7 +715,9 @@ export const providerRegistryPlugin: JupyterFrontEndPlugin<void> = {
         }
 
         if (doesBrowserSupportWebLLM()) {
-          preloadConfiguredWebLLMModels(settingsModel);
+          void webLLMSettingsLoaded.then(() =>
+            preloadConfiguredWebLLMModels(settingsModel)
+          );
         }
 
         if (doesBrowserSupportTransformersJS()) {
