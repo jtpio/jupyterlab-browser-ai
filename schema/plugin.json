@@ -19,6 +19,13 @@
         "Qwen3-0.6B-q4f16_1-MLC"
       ]
     },
+    "webLLMContextWindowSize": {
+      "title": "WebLLM Context Window Size",
+      "description": "Context window size in tokens for WebLLM models. Use 0 for the default of the model, which is 4096 tokens for most models. Tool calling needs a larger window, for example 8192. A larger window uses more GPU memory. Reload the page to apply a change.",
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
     "transformersJsModels": {
       "title": "Transformers.js Models",
       "description": "Hugging Face model IDs shown in the Transformers.js model dropdown. This setting controls the full list. Browse model names at https://huggingface.co/models?library=transformers.js&pipeline_tag=text-generation&sort=downloads",
